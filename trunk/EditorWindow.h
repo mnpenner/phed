@@ -32,6 +32,8 @@ private slots:
     bool saveAs();
     void about();
     void mapWasModified();
+    void mousePosChanged(QPointF);
+    void toolSelected(QAction*);
 
 private:
     void createActions();
@@ -69,7 +71,7 @@ private:
     QAction *stopAct;
 
     QActionGroup *toolsActGroup;
-    QAction *selectionToolAct;
+    QAction *selectToolAct;
     QAction *circleToolAct;
     QAction *polygonToolAct;
     QAction *rectToolAct;
