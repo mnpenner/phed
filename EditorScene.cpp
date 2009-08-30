@@ -7,10 +7,10 @@
 
 #include "EditorScene.h"
 
-EditorScene::mousePressEvent(QGraphicsSceneMouseEvent* mouseEvent) {
+void EditorScene::mousePressEvent(QGraphicsSceneMouseEvent* mouseEvent) {
 
 }
 
-EditorScene::mouseMoveEvent(QGraphicsSceneMouseEvent* mouseEvent) {
+void EditorScene::mouseMoveEvent(QGraphicsSceneMouseEvent* mouseEvent) {
     
 }
