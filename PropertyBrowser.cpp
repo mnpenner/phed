@@ -14,9 +14,8 @@ PropertyBrowser::PropertyBrowser(QWidget* parent)
     setPropertiesWithoutValueMarked(true);
     setIndentation(10);
     setResizeMode(ResizeToContents);
-    setFactoryForManager(m_variantManager, new QtVariantEditorFactory);
     setAlternatingRowColors(false);
-
+    setFactoryForManager(m_variantManager, new QtVariantEditorFactory);
 }
 
 void PropertyBrowser::valueChanged(QtProperty *property, const QVariant &value) {

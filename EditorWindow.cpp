@@ -22,15 +22,23 @@ EditorWindow::EditorWindow() {
     m_view->setCacheMode(QGraphicsView::CacheBackground);
     m_view->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
     m_view->setDragMode(QGraphicsView::RubberBandDrag);
+    m_view->scale(1.0, -1.0); // flip coordinate system so that y increases upwards
+    m_view->fitInView(-5, -5, 10, 10, Qt::KeepAspectRatio);
     setCentralWidget(m_view);
+
+    connect(m_scene, SIGNAL(mousePosChanged(QPointF)), this, SLOT(mousePosChanged(QPointF)));
 
     createDockWindows();
     createActions();
     createMenus();
     createToolBars();
     createStatusBar();
-    
+
     readSettings();
+}
+
+void EditorWindow::mousePosChanged(QPointF pos) {
+    statusBar()->showMessage(tr("%1, %2").arg(pos.x(), 0, 'f', 2).arg(pos.y(), 0, 'f', 2));
 }
 
 void EditorWindow::createDockWindows() {
@@ -99,41 +107,43 @@ void EditorWindow::createActions() {
     toolsActGroup = new QActionGroup(this);
     toolsActGroup->setExclusive(true);
 
-    selectionToolAct = new QAction(QIcon(":/icons/custom/select.png"), tr("&Select"), toolsActGroup);
-    selectionToolAct->setIconVisibleInMenu(false);
-    selectionToolAct->setShortcut(Qt::Key_S);
-    selectionToolAct->setCheckable(true);
-    selectionToolAct->setStatusTip(tr("Select objects to modify or delete"));
-    //connect(selectionToolAct, SIGNAL(triggered()), editorView, SLOT(useSelectionTool()));
-    selectionToolAct->setChecked(true);
+    selectToolAct = new QAction(QIcon(":/icons/custom/select.png"), tr("&Select"), toolsActGroup);
+    selectToolAct->setIconVisibleInMenu(false);
+    selectToolAct->setShortcut(Qt::Key_S);
+    selectToolAct->setCheckable(true);
+    selectToolAct->setStatusTip(tr("Select objects to modify or delete"));
+    selectToolAct->setProperty("tool", EditorScene::Select);
+    selectToolAct->setChecked(true);
 
-    circleToolAct = new QAction(QIcon(":/icons/custom/ellipse.png"), tr("&Circle"), toolsActGroup);
+    circleToolAct = new QAction(QIcon(":/icons/custom/ellipse.png"), tr("&Ellipse"), toolsActGroup);
     circleToolAct->setIconVisibleInMenu(false);
-    circleToolAct->setShortcut(Qt::Key_C);
+    circleToolAct->setShortcut(Qt::Key_E);
     circleToolAct->setCheckable(true);
-    circleToolAct->setStatusTip(tr("Draw circular objects"));
-    //connect(circleToolAct, SIGNAL(triggered()), editorView, SLOT(useCircleTool()));
+    circleToolAct->setStatusTip(tr("Draw ellipse objects"));
+    circleToolAct->setProperty("tool", EditorScene::Ellipse);
 
     polygonToolAct = new QAction(QIcon(":/icons/custom/polygon.png"), tr("&Polygon"), toolsActGroup);
     polygonToolAct->setIconVisibleInMenu(false);
     polygonToolAct->setShortcut(Qt::Key_P);
     polygonToolAct->setCheckable(true);
     polygonToolAct->setStatusTip(tr("Draw polygonal objects"));
-    //connect(polygonToolAct, SIGNAL(triggered()), editorView, SLOT(usePolygonTool()));
+    polygonToolAct->setProperty("tool", EditorScene::Polygon);
 
     rectToolAct = new QAction(QIcon(":/icons/custom/rectangle.png"), tr("&Rectangle"), toolsActGroup);
     rectToolAct->setIconVisibleInMenu(false);
     rectToolAct->setShortcut(Qt::Key_R);
     rectToolAct->setCheckable(true);
-    rectToolAct->setStatusTip(tr("Draw polygonal objects"));
-    //connect(rectToolAct, SIGNAL(triggered()), editorView, SLOT(useRectangleTool()));
+    rectToolAct->setStatusTip(tr("Draw rectangle objects"));
+    rectToolAct->setProperty("tool", EditorScene::Rectangle);
 
     lineToolAct = new QAction(QIcon(":/icons/custom/line.png"), tr("&Line"), toolsActGroup);
     lineToolAct->setIconVisibleInMenu(false);
     lineToolAct->setShortcut(Qt::Key_L);
     lineToolAct->setCheckable(true);
     lineToolAct->setStatusTip(tr("Draw lines"));
-    //connect(lineToolAct, SIGNAL(triggered()), editorView, SLOT(useLineTool()));
+    lineToolAct->setProperty("tool", EditorScene::EdgeChain);
+
+    connect(toolsActGroup, SIGNAL(selected(QAction*)), this, SLOT(toolSelected(QAction*)));
 
 
     controlActGroup = new QActionGroup(this);
@@ -156,7 +166,10 @@ void EditorWindow::createActions() {
     pauseAct->setChecked(true);
     pauseAct->setVisible(false);
 }
- 
+
+void EditorWindow::toolSelected(QAction* act) {
+    m_scene->setTool((EditorScene::Tool)act->property("tool").toInt());
+}
 
 void EditorWindow::createMenus() {
     fileMenu = menuBar()->addMenu(tr("&File"));
@@ -175,7 +188,7 @@ void EditorWindow::createMenus() {
     controlMenu->addAction(pauseAct);
 
     toolsMenu = menuBar()->addMenu(tr("&Tools"));
-    toolsMenu->addAction(selectionToolAct);
+    toolsMenu->addAction(selectToolAct);
     toolsMenu->addAction(circleToolAct);
     toolsMenu->addAction(rectToolAct);
     toolsMenu->addAction(polygonToolAct);
@@ -202,7 +215,7 @@ void EditorWindow::createToolBars() {
 
     toolsToolBar = addToolBar(tr("Tools"));
     toolsToolBar->setObjectName("ToolsToolBar");
-    toolsToolBar->addAction(selectionToolAct);
+    toolsToolBar->addAction(selectToolAct);
     toolsToolBar->addAction(circleToolAct);
     toolsToolBar->addAction(rectToolAct);
     toolsToolBar->addAction(polygonToolAct);
