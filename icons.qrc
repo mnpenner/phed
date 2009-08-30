@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RCC version="1.0">
+    <qresource>
+        <file>icons/page_white.png</file>
+        <file>icons/folder_page_white.png</file>
+        <file>icons/disk.png</file>
+        <file>icons/elementary/media-playback-start.png</file>
+        <file>icons/elementary/media-playback-pause.png</file>
+        <file>icons/crystal/ellipse.png</file>
+        <file>icons/crystal/line.png</file>
+        <file>icons/crystal/polygon.png</file>
+        <file>icons/crystal/rectangle.png</file>
+        <file>icons/crystal/select.png</file>
+    </qresource>
+</RCC>
