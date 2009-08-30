@@ -9,6 +9,8 @@
 #define	_EDITORWINDOW_H
 
 #include <QtGui>
+#include "EditorScene.h"
+#include "PropertyBrowser.h"
 
 class EditorView;
 class PropertiesWindow;
@@ -39,9 +41,6 @@ private:
     void createDockWindows();
     void writeSettings();
     void readSettings();
-
-    EditorView *editorView;
-    PropertiesWindow *propertiesDock;
 
     QMenu *fileMenu;
     QMenu *helpMenu;
@@ -76,8 +75,10 @@ private:
     QAction *rectToolAct;
     QAction *lineToolAct;
 
-    QGraphicsScene *scene;
-    QGraphicsView *view;
+    EditorScene *m_scene;
+    QGraphicsView *m_view;
+    QDockWidget *m_propertyBrowserDock;
+    PropertyBrowser *m_propertyBrowser;
 };
 
 #endif	/* _EDITORWINDOW_H */

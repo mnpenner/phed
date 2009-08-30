@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="62">
+  <logicalFolder name="root" displayName="root" projectFiles="true">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+      <itemPath>EditorScene.h</itemPath>
+      <itemPath>EditorWindow.h</itemPath>
+      <itemPath>Object.h</itemPath>
+      <itemPath>Polygon.h</itemPath>
+      <itemPath>PropertiesWindow.h</itemPath>
+      <itemPath>PropertyBrowser.h</itemPath>
+    </logicalFolder>
+    <logicalFolder name="ResourceFiles"
+                   displayName="Resource Files"
+                   projectFiles="true">
+      <itemPath>icons.qrc</itemPath>
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <itemPath>EditorScene.cpp</itemPath>
+      <itemPath>EditorWindow.cpp</itemPath>
+      <itemPath>Object.cpp</itemPath>
+      <itemPath>Polygon.cpp</itemPath>
+      <itemPath>PropertiesWindow.cpp</itemPath>
+      <itemPath>PropertyBrowser.cpp</itemPath>
+      <itemPath>main.cpp</itemPath>
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Debug" type="4">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <compilerSet>GNU|GNU</compilerSet>
+        <platform>2</platform>
+      </toolsSet>
+      <qt>
+        <target>Phed</target>
+        <modules>core gui opengl</modules>
+        <mocDir>qt</mocDir>
+        <rccDir>qt</rccDir>
+        <uiDir>qt</uiDir>
+      </qt>
+      <compileType>
+        <linkerTool>
+          <linkerDynSerch>
+            <pElem>/usr/local/lib</pElem>
+          </linkerDynSerch>
+          <linkerLibItems>
+            <linkerLibLibItem>Box2D</linkerLibLibItem>
+            <linkerLibLibItem>QtSolutions_PropertyBrowser-2.5</linkerLibLibItem>
+          </linkerLibItems>
+        </linkerTool>
+        <requiredProjects>
+          <makeArtifact PL="../qtpropertybrowser-2.5-opensource"
+                        CT="0"
+                        CN="Default"
+                        AC="true"
+                        BL="false"
+                        WD="../qtpropertybrowser-2.5-opensource"
+                        BC="${MAKE}  -f Makefile-qtpropertybrowser-2.5-opensource.mk CONF=Default"
+                        CC="${MAKE}  -f Makefile-qtpropertybrowser-2.5-opensource.mk CONF=Default clean"
+                        OP="">
+          </makeArtifact>
+        </requiredProjects>
+      </compileType>
+    </conf>
+    <conf name="Release" type="4">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <compilerSet>GNU|GNU</compilerSet>
+        <platform>2</platform>
+      </toolsSet>
+      <qt>
+        <buildMode>1</buildMode>
+        <modules>core gui</modules>
+      </qt>
+      <compileType>
+        <cTool>
+          <developmentMode>5</developmentMode>
+        </cTool>
+        <ccTool>
+          <developmentMode>5</developmentMode>
+        </ccTool>
+        <fortranCompilerTool>
+          <developmentMode>5</developmentMode>
+        </fortranCompilerTool>
+        <linkerTool>
+          <linkerLibItems>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+    </conf>
+  </confs>
+</configurationDescriptor>

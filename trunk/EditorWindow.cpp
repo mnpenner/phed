@@ -15,21 +15,15 @@ EditorWindow::EditorWindow() {
 
     setWindowTitle("Phed");
 
-    scene = new QGraphicsScene;
-    scene->setItemIndexMethod(QGraphicsScene::NoIndex);
-    view = new QGraphicsView(scene);
-    view->setRenderHint(QPainter::Antialiasing);
-    view->setCacheMode(QGraphicsView::CacheBackground);
-    view->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
-    view->setDragMode(QGraphicsView::RubberBandDrag);
-    setCentralWidget(view);
+    m_scene = new EditorScene;
+    m_scene->setItemIndexMethod(QGraphicsScene::NoIndex);
+    m_view = new QGraphicsView(m_scene);
+    m_view->setRenderHint(QPainter::Antialiasing);
+    m_view->setCacheMode(QGraphicsView::CacheBackground);
+    m_view->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+    m_view->setDragMode(QGraphicsView::RubberBandDrag);
+    setCentralWidget(m_view);
 
-/*
-    editorView = new EditorView(this);
-    connect(editorView, SIGNAL(statusBarUpdate(QString)), 
-	    statusBar(), SLOT(showMessage(QString)));
-    setCentralWidget(editorView);
-*/
     createDockWindows();
     createActions();
     createMenus();
@@ -40,10 +34,13 @@ EditorWindow::EditorWindow() {
 }
 
 void EditorWindow::createDockWindows() {
-    propertiesDock = new PropertiesWindow(this);
-    //connect(editorView, SIGNAL(objectsSelected(QList<QObject*>)), propertiesWindow, SLOT(populate(QList<QObject*>)));
-    propertiesDock->setObjectName("PropertiesWindow");
-    addDockWidget(Qt::RightDockWidgetArea, propertiesDock);
+    m_propertyBrowserDock = new QDockWidget(this);
+    m_propertyBrowserDock->setObjectName("PropertiesDock");
+    m_propertyBrowserDock->setWindowTitle("Properties");
+    m_propertyBrowserDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+    m_propertyBrowser = new PropertyBrowser;
+    m_propertyBrowserDock->setWidget(m_propertyBrowser);
+    addDockWidget(Qt::RightDockWidgetArea, m_propertyBrowserDock);
 }
 
 void EditorWindow::closeEvent(QCloseEvent* event) {
@@ -64,17 +61,17 @@ void EditorWindow::readSettings() {
 }
 
 void EditorWindow::createActions() {
-    newAct = new QAction(QIcon(":/icons/page_white.png"), tr("&New"), this);
+    newAct = new QAction(QIcon(":/icons/silk/page_white.png"), tr("&New"), this);
     newAct->setShortcuts(QKeySequence::New);
     newAct->setStatusTip(tr("Create a new map"));
     connect(newAct, SIGNAL(triggered()), this, SLOT(newFile()));
 
-    openAct = new QAction(QIcon(":/icons/folder_page_white.png"), tr("&Open"), this);
+    openAct = new QAction(QIcon(":/icons/silk/folder_page_white.png"), tr("&Open"), this);
     openAct->setShortcuts(QKeySequence::Open);
     openAct->setStatusTip(tr("Open an existing map"));
     connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
 
-    saveAct = new QAction(QIcon(":/icons/disk.png"), tr("&Save"), this);
+    saveAct = new QAction(QIcon(":/icons/silk/disk.png"), tr("&Save"), this);
     saveAct->setShortcuts(QKeySequence::Save);
     saveAct->setStatusTip(tr("Save the map to disk"));
     connect(saveAct, SIGNAL(triggered()), this, SLOT(save()));
@@ -102,7 +99,7 @@ void EditorWindow::createActions() {
     toolsActGroup = new QActionGroup(this);
     toolsActGroup->setExclusive(true);
 
-    selectionToolAct = new QAction(QIcon(":/icons/crystal/select.png"), tr("&Select"), toolsActGroup);
+    selectionToolAct = new QAction(QIcon(":/icons/custom/select.png"), tr("&Select"), toolsActGroup);
     selectionToolAct->setIconVisibleInMenu(false);
     selectionToolAct->setShortcut(Qt::Key_S);
     selectionToolAct->setCheckable(true);
@@ -110,28 +107,28 @@ void EditorWindow::createActions() {
     //connect(selectionToolAct, SIGNAL(triggered()), editorView, SLOT(useSelectionTool()));
     selectionToolAct->setChecked(true);
 
-    circleToolAct = new QAction(QIcon(":/icons/crystal/ellipse.png"), tr("&Circle"), toolsActGroup);
+    circleToolAct = new QAction(QIcon(":/icons/custom/ellipse.png"), tr("&Circle"), toolsActGroup);
     circleToolAct->setIconVisibleInMenu(false);
     circleToolAct->setShortcut(Qt::Key_C);
     circleToolAct->setCheckable(true);
     circleToolAct->setStatusTip(tr("Draw circular objects"));
     //connect(circleToolAct, SIGNAL(triggered()), editorView, SLOT(useCircleTool()));
 
-    polygonToolAct = new QAction(QIcon(":/icons/crystal/polygon.png"), tr("&Polygon"), toolsActGroup);
+    polygonToolAct = new QAction(QIcon(":/icons/custom/polygon.png"), tr("&Polygon"), toolsActGroup);
     polygonToolAct->setIconVisibleInMenu(false);
     polygonToolAct->setShortcut(Qt::Key_P);
     polygonToolAct->setCheckable(true);
     polygonToolAct->setStatusTip(tr("Draw polygonal objects"));
     //connect(polygonToolAct, SIGNAL(triggered()), editorView, SLOT(usePolygonTool()));
 
-    rectToolAct = new QAction(QIcon(":/icons/crystal/rectangle.png"), tr("&Rectangle"), toolsActGroup);
+    rectToolAct = new QAction(QIcon(":/icons/custom/rectangle.png"), tr("&Rectangle"), toolsActGroup);
     rectToolAct->setIconVisibleInMenu(false);
     rectToolAct->setShortcut(Qt::Key_R);
     rectToolAct->setCheckable(true);
     rectToolAct->setStatusTip(tr("Draw polygonal objects"));
     //connect(rectToolAct, SIGNAL(triggered()), editorView, SLOT(useRectangleTool()));
 
-    lineToolAct = new QAction(QIcon(":/icons/crystal/line.png"), tr("&Line"), toolsActGroup);
+    lineToolAct = new QAction(QIcon(":/icons/custom/line.png"), tr("&Line"), toolsActGroup);
     lineToolAct->setIconVisibleInMenu(false);
     lineToolAct->setShortcut(Qt::Key_L);
     lineToolAct->setCheckable(true);
@@ -142,13 +139,13 @@ void EditorWindow::createActions() {
     controlActGroup = new QActionGroup(this);
     controlActGroup->setExclusive(true);
 
-    playAct = new QAction(QIcon(":/icons/elementary/media-playback-start.png"), tr("&Run"), controlActGroup);
+    playAct = new QAction(QIcon(":/icons/custom/media-playback-start.png"), tr("&Run"), controlActGroup);
     playAct->setShortcut(Qt::Key_Space);
     playAct->setCheckable(true);
     playAct->setStatusTip(tr("Run physics"));
     //connect(playAct, SIGNAL(triggered()), editorView, SLOT(runPhysics()));
 
-    pauseAct = new QAction(QIcon(":/icons/elementary/media-playback-pause.png"), tr("&Pause"), controlActGroup);
+    pauseAct = new QAction(QIcon(":/icons/custom/media-playback-pause.png"), tr("&Pause"), controlActGroup);
     pauseAct->setShortcut(Qt::Key_Space);
     pauseAct->setCheckable(true);
     pauseAct->setStatusTip(tr("Pause physics"));
@@ -185,7 +182,7 @@ void EditorWindow::createMenus() {
     toolsMenu->addAction(lineToolAct);
 
     windowsMenu = menuBar()->addMenu(tr("&Window"));
-    windowsMenu->addAction(propertiesDock->toggleViewAction());
+    windowsMenu->addAction(m_propertyBrowserDock->toggleViewAction());
 
     helpMenu = menuBar()->addMenu(tr("&Help"));
     helpMenu->addAction(aboutAct);
