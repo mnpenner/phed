@@ -36,6 +36,7 @@ private slots:
     void toolSelected(QAction*);
 
 private:
+    void createScene();
     void createActions();
     void createMenus();
     void createToolBars();

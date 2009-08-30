@@ -12,22 +12,9 @@
 
 EditorWindow::EditorWindow() {
     Q_INIT_RESOURCE(icons);
-
     setWindowTitle("Phed");
 
-    m_scene = new EditorScene;
-    m_scene->setItemIndexMethod(QGraphicsScene::NoIndex);
-    m_view = new QGraphicsView(m_scene);
-    m_view->setRenderHint(QPainter::Antialiasing);
-    m_view->setCacheMode(QGraphicsView::CacheBackground);
-    m_view->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
-    m_view->setDragMode(QGraphicsView::RubberBandDrag);
-    m_view->scale(1.0, -1.0); // flip coordinate system so that y increases upwards
-    m_view->fitInView(-5, -5, 10, 10, Qt::KeepAspectRatio);
-    setCentralWidget(m_view);
-
-    connect(m_scene, SIGNAL(mousePosChanged(QPointF)), this, SLOT(mousePosChanged(QPointF)));
-
+    createScene();
     createDockWindows();
     createActions();
     createMenus();
@@ -35,6 +22,22 @@ EditorWindow::EditorWindow() {
     createStatusBar();
 
     readSettings();
+}
+
+void EditorWindow::createScene() {
+    m_scene = new EditorScene;
+    m_scene->setItemIndexMethod(QGraphicsScene::NoIndex);
+    m_scene->setSceneRect(-5, -5, 10, 10);
+    m_view = new QGraphicsView(m_scene);
+    m_view->setRenderHint(QPainter::Antialiasing);
+    m_view->setCacheMode(QGraphicsView::CacheBackground);
+    m_view->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
+    m_view->setDragMode(QGraphicsView::NoDrag);
+    m_view->scale(1.0, -1.0); // flip coordinate system so that y increases upwards
+    m_view->fitInView(-5, -5, 10, 10, Qt::KeepAspectRatio);
+    setCentralWidget(m_view);
+
+    connect(m_scene, SIGNAL(mousePosChanged(QPointF)), this, SLOT(mousePosChanged(QPointF)));
 }
 
 void EditorWindow::mousePosChanged(QPointF pos) {

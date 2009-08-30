@@ -11,12 +11,25 @@
 
 #include "EditorScene.h"
 #include "Object.h"
+#include "LineStrip.h"
 
-EditorScene::EditorScene(QObject* parent): QGraphicsScene(parent) {    
+EditorScene::EditorScene(QObject* parent): QGraphicsScene(parent), m_lineStrip(NULL) {
 }
 
 void EditorScene::mousePressEvent(QGraphicsSceneMouseEvent* mouseEvent) {
-    mouseEvent->ignore();
+    if (mouseEvent->button() != Qt::LeftButton)
+        return;
+    switch(m_tool) {
+        case Polygon:
+            if(m_lineStrip == NULL) {
+                m_lineStrip = new LineStrip;
+                addItem(m_lineStrip);
+            }
+            m_lineStrip->add(mouseEvent->scenePos());
+            break;
+        default:
+            break;
+    }
 }
 
 void EditorScene::mouseMoveEvent(QGraphicsSceneMouseEvent* mouseEvent) {

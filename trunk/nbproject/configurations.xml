@@ -6,6 +6,7 @@
                    projectFiles="true">
       <itemPath>EditorScene.h</itemPath>
       <itemPath>EditorWindow.h</itemPath>
+      <itemPath>LineStrip.h</itemPath>
       <itemPath>Object.h</itemPath>
       <itemPath>Polygon.h</itemPath>
       <itemPath>PropertiesWindow.h</itemPath>
@@ -21,6 +22,7 @@
                    projectFiles="true">
       <itemPath>EditorScene.cpp</itemPath>
       <itemPath>EditorWindow.cpp</itemPath>
+      <itemPath>LineStrip.cpp</itemPath>
       <itemPath>Object.cpp</itemPath>
       <itemPath>Polygon.cpp</itemPath>
       <itemPath>PropertiesWindow.cpp</itemPath>
