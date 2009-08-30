@@ -7,25 +7,17 @@
 
 #include <QtGui/QApplication>
 #include <QtOpenGL>
-#include "LauncherDialog.h"
 #include "EditorWindow.h"
 
 int main(int argc, char *argv[]) {
     QCoreApplication::setOrganizationName("mnbGames");
-    QCoreApplication::setOrganizationDomain("mnbayazit.com");
-    QCoreApplication::setApplicationName("Q2D");
-
-    //QGLFormat fmt = QGLFormat::defaultFormat();
-    //fmt.setSampleBuffers(true);
-    //QGLFormat::setDefaultFormat(fmt);
+    QCoreApplication::setOrganizationDomain("http://code.google.com/p/phed/");
+    QCoreApplication::setApplicationName("Phed");
 
     QApplication app(argc, argv);
     
-    //LauncherDialog mainMenu;
-    ///mainMenu.show();
-
-    EditorWindow ed;
-    ed.show();
+    EditorWindow ew;
+    ew.show();
 
     return app.exec();
 }
