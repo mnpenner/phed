@@ -8,15 +8,14 @@
 #ifndef _EDITORWINDOW_H
 #define	_EDITORWINDOW_H
 
-#include <QtGui>
+#include <QtGui/QtGui>
 #include "EditorScene.h"
 #include "PropertyBrowser.h"
 
 class EditorView;
 class PropertiesWindow;
 
-class EditorWindow : public QMainWindow
-{
+class EditorWindow : public QMainWindow {
     Q_OBJECT
 
 public:
@@ -32,8 +31,8 @@ private slots:
     bool saveAs();
     void about();
     void mapWasModified();
-    void mousePosChanged(QPointF);
     void toolSelected(QAction*);
+    void mousePosChanged(const QPointF&);
 
 private:
     void createScene();
@@ -79,7 +78,7 @@ private:
     QAction *lineToolAct;
 
     EditorScene *m_scene;
-    QGraphicsView *m_view;
+    EditorView *m_view;
     QDockWidget *m_propertyBrowserDock;
     PropertyBrowser *m_propertyBrowser;
 };

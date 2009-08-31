@@ -5,6 +5,7 @@
                    displayName="Header Files"
                    projectFiles="true">
       <itemPath>EditorScene.h</itemPath>
+      <itemPath>EditorView.h</itemPath>
       <itemPath>EditorWindow.h</itemPath>
       <itemPath>LineStrip.h</itemPath>
       <itemPath>Object.h</itemPath>
@@ -21,6 +22,7 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>EditorScene.cpp</itemPath>
+      <itemPath>EditorView.cpp</itemPath>
       <itemPath>EditorWindow.cpp</itemPath>
       <itemPath>LineStrip.cpp</itemPath>
       <itemPath>Object.cpp</itemPath>
@@ -51,6 +53,11 @@
         <uiDir>qt</uiDir>
       </qt>
       <compileType>
+        <ccTool>
+          <incDir>
+            <pElem>/usr/include/qt4</pElem>
+          </incDir>
+        </ccTool>
         <linkerTool>
           <linkerDynSerch>
             <pElem>/usr/local/lib</pElem>
