@@ -10,33 +10,22 @@
 #include "LineStrip.h"
 
 QRectF LineStrip::boundingRect() const {
-    if(points.isEmpty()) return QRectF();
-    QPointF tl = points.first();
-    QPointF br = points.last();
-    foreach(QPointF p, points) {
-        if(p.x() < tl.x()) tl.setX(p.x());
-        if(p.y() > tl.y()) tl.setY(p.y());
-        if(p.x() > br.x()) br.setX(p.x());
-        if(p.y() < br.y()) br.setY(p.y());
-    }
-    return QRectF(tl, br);
+    return m_poly.boundingRect();
 }
 
 void LineStrip::append(const QPointF& p) {
-    points.append(p);
+    m_poly.append(p);
     prepareGeometryChange();
 }
 
 bool LineStrip::isEmpty() const {
-    return points.isEmpty();
+    return m_poly.isEmpty();
 }
 
 const QPointF& LineStrip::last() const {
-    return points.last();
+    return m_poly.last();
 }
 
 void LineStrip::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {
-    for(int i = 1; i < points.size(); ++i) {
-        painter->drawLine(points[i - 1], points[i]);
-    }
+    painter->drawPolyline(m_poly);
 }
