@@ -18,6 +18,7 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent* event);
+    void resizeEvent(QResizeEvent*);
 private:
     QPointF m_lastMousePos;
     QCursor m_lastCursor;
