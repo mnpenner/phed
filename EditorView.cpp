@@ -22,6 +22,14 @@ EditorView::EditorView(QGraphicsScene* scene, QWidget* parent) : QGraphicsView(s
     setBackgroundBrush(QBrush(QColor(232,232,232), Qt::DiagCrossPattern));
 }
 
+void EditorView::resizeEvent(QResizeEvent*) {
+    QPointF tl(horizontalScrollBar()->value(), verticalScrollBar()->value());
+    QPointF br = tl + viewport()->rect().bottomRight();
+    QMatrix mat = matrix().inverted();
+    QRectF vr = mat.mapRect(QRectF(tl,br));
+    setSceneRect(vr.united(sceneRect()));
+}
+
 void EditorView::mousePressEvent(QMouseEvent* event) {
     if(event->button() == Qt::MidButton) {
         m_lastMousePos = mapToScene(event->pos());
@@ -45,7 +53,7 @@ void EditorView::wheelEvent(QWheelEvent* event) {
     if(event->delta() > 0) factor = event->delta() / 100.;
     else factor = -100. / event->delta();
     setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
-    scale(factor, factor);
+    scale(factor, factor); // TODO: cap when whole scene is visible
 }
 
 void EditorView::mouseMoveEvent(QMouseEvent* event) {
@@ -54,7 +62,6 @@ void EditorView::mouseMoveEvent(QMouseEvent* event) {
         QPointF diff = pos - m_lastMousePos;
         setTransformationAnchor(QGraphicsView::NoAnchor);
         translate(diff.x(), diff.y());
-        //m_lastMousePos = pos;
     }
     QGraphicsView::mouseMoveEvent(event); // propogate
 }
