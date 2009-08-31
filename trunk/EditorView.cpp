@@ -1,7 +1,7 @@
-/* 
+/*
  * File:   EditorView.cpp
  * Author: mark
- * 
+ *
  * Created on August 30, 2009, 1:26 PM
  */
 
@@ -14,20 +14,22 @@
 EditorView::EditorView(QGraphicsScene* scene, QWidget* parent) : QGraphicsView(scene, parent) {
     setRenderHint(QPainter::Antialiasing);
     setCacheMode(QGraphicsView::CacheBackground);
-    setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
+    setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
     setDragMode(QGraphicsView::NoDrag);
     scale(1.0, -1.0); // flip coordinate system so that y increases upwards
     fitInView(-5, -5, 10, 10, Qt::KeepAspectRatio);
     setInteractive(true);
     setBackgroundBrush(QBrush(QColor(232,232,232), Qt::DiagCrossPattern));
+    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    setSceneRect(-1000000000,-1000000000,2000000000,2000000000);
 }
 
-void EditorView::resizeEvent(QResizeEvent*) {
+QRectF EditorView::visibleRect() {
     QPointF tl(horizontalScrollBar()->value(), verticalScrollBar()->value());
     QPointF br = tl + viewport()->rect().bottomRight();
     QMatrix mat = matrix().inverted();
-    QRectF vr = mat.mapRect(QRectF(tl,br));
-    setSceneRect(vr.united(sceneRect()));
+    return mat.mapRect(QRectF(tl,br));
 }
 
 void EditorView::mousePressEvent(QMouseEvent* event) {

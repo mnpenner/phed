@@ -19,7 +19,7 @@ public:
     bool isEmpty() const;
     const QPointF& last() const;
 private:
-    QList<QPointF> points;
+    QPolygonF m_poly;
 };
 
 #endif	/* _LINESTRIP_H */

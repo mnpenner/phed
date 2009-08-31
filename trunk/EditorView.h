@@ -13,12 +13,14 @@
 class EditorView : public QGraphicsView {
 public:
     EditorView(QGraphicsScene *scene, QWidget *parent = NULL);
+    QRectF visibleRect();
+    
 protected:
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent* event);
-    void resizeEvent(QResizeEvent*);
+
 private:
     QPointF m_lastMousePos;
     QCursor m_lastCursor;
