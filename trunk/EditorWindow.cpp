@@ -5,7 +5,7 @@
  * Created on August 11, 2009, 11:20 AM
  */
 
-#include <QtGui>
+#include <QtGui/QtGui>
 #include "EditorWindow.h"
 #include "EditorView.h"
 #include "PropertiesWindow.h"
@@ -25,22 +25,13 @@ EditorWindow::EditorWindow() {
 }
 
 void EditorWindow::createScene() {
-    m_scene = new EditorScene;
-    m_scene->setItemIndexMethod(QGraphicsScene::NoIndex);
-    m_scene->setSceneRect(-5, -5, 10, 10);
-    m_view = new QGraphicsView(m_scene);
-    m_view->setRenderHint(QPainter::Antialiasing);
-    m_view->setCacheMode(QGraphicsView::CacheBackground);
-    m_view->setViewportUpdateMode(QGraphicsView::BoundingRectViewportUpdate);
-    m_view->setDragMode(QGraphicsView::NoDrag);
-    m_view->scale(1.0, -1.0); // flip coordinate system so that y increases upwards
-    m_view->fitInView(-5, -5, 10, 10, Qt::KeepAspectRatio);
+    m_scene = new EditorScene(this);
+    m_view = new EditorView(m_scene);
     setCentralWidget(m_view);
-
     connect(m_scene, SIGNAL(mousePosChanged(QPointF)), this, SLOT(mousePosChanged(QPointF)));
 }
 
-void EditorWindow::mousePosChanged(QPointF pos) {
+void EditorWindow::mousePosChanged(const QPointF &pos) {
     statusBar()->showMessage(tr("%1, %2").arg(pos.x(), 0, 'f', 2).arg(pos.y(), 0, 'f', 2));
 }
 

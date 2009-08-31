@@ -8,7 +8,7 @@
 #ifndef _PROPERTIESWINDOW_H
 #define	_PROPERTIESWINDOW_H
 
-#include <QtGui>
+#include <QtGui/QtGui>
 #include "Object.h"
 #include "PropertyBrowser.h"
 

@@ -22,9 +22,17 @@ QRectF LineStrip::boundingRect() const {
     return QRectF(tl, br);
 }
 
-void LineStrip::add(const QPointF& p) {
+void LineStrip::append(const QPointF& p) {
     points.append(p);
     prepareGeometryChange();
+}
+
+bool LineStrip::isEmpty() const {
+    return points.isEmpty();
+}
+
+const QPointF& LineStrip::last() const {
+    return points.last();
 }
 
 void LineStrip::paint(QPainter* painter, const QStyleOptionGraphicsItem*, QWidget*) {

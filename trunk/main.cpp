@@ -6,7 +6,6 @@
  */
 
 #include <QtGui/QApplication>
-#include <QtOpenGL>
 #include "EditorWindow.h"
 
 int main(int argc, char *argv[]) {

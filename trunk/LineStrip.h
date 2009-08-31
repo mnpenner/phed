@@ -11,11 +11,13 @@
 #include <qt4/QtGui/qgraphicsitem.h>
 #include <qt4/QtGui/QPainter>
 
-class LineStrip : public QGraphicsItem {
+class LineStrip : public QGraphicsPolygonItem {
 public:
     QRectF boundingRect() const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-    void add(const QPointF& p);
+    void append(const QPointF& p);
+    bool isEmpty() const;
+    const QPointF& last() const;
 private:
     QList<QPointF> points;
 };

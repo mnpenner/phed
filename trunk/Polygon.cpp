@@ -61,7 +61,14 @@ Polygon Polygon::copy(int i, int j) const {
     return p;
 }
 
-QList<Polygon> Polygon::decomp() const {
+bool Polygon::isConvex() const { // precondition: ccw
+    for(int i = 0; i < size(); ++i) {
+        if(right(i)) return false;
+    }
+    return true;
+}
+
+QList<Polygon> Polygon::decomp() const { // precondition: ccw
     QList<Polygon> list;
     qreal d, dist1, dist2;
     QPointF ip, ip1, ip2; // intersection points
@@ -162,7 +169,7 @@ bool Polygon::canSee(int i, int j) const {
     return true;
 }
 
-bool Polygon::reflex(int i) const {
+bool Polygon::reflex(int i) const { // precondition: ccw
     return right(i);
 }
 

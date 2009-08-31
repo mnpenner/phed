@@ -28,6 +28,7 @@ public:
     Polygon copy(int i, int j) const;
     Orientation orientation() const;
     bool canSee(int i, int j) const;
+    bool isConvex() const;
     bool left(int i) const;
     bool leftOn(int i) const;
     bool right(int i) const;

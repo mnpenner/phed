@@ -23,11 +23,11 @@ public:
 
     EditorScene(QObject *parent = NULL);
 
+signals:
+    void mousePosChanged(const QPointF&);
+
 public slots:
     void setTool(Tool tool);
-
-signals:
-    void mousePosChanged(QPointF pos);
     
 protected:
     void mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent);
@@ -35,7 +35,8 @@ protected:
 
 private:
     Tool m_tool;
-    LineStrip *m_lineStrip;
+    LineStrip m_lineStrip;
+    QGraphicsLineItem m_fadeLine;
 };
 
 #endif	/* _EDITORSCENE_H */
