@@ -11,6 +11,7 @@
 #include <QtGui/QtGui>
 #include "EditorScene.h"
 #include "PropertyBrowser.h"
+#include "World.h"
 
 class EditorView;
 class PropertiesWindow;

@@ -25,10 +25,10 @@ EditorWindow::EditorWindow() {
 }
 
 void EditorWindow::createScene() {
-    m_scene = new EditorScene(this);
-    m_view = new EditorView(m_scene);
+    m_world = new World(QPointF(0, -9.80665), this);
+    m_view = new EditorView(m_world, this);
     setCentralWidget(m_view);
-    connect(m_scene, SIGNAL(mousePosChanged(QPointF)), this, SLOT(mousePosChanged(QPointF)));
+    connect(m_view, SIGNAL(mousePosChanged(QPointF)), this, SLOT(mousePosChanged(QPointF)));
 }
 
 void EditorWindow::mousePosChanged(const QPointF &pos) {
