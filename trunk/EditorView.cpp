@@ -11,27 +11,75 @@
 #include <qt4/QtGui/qabstractslider.h>
 #include "EditorView.h"
 
-EditorView::EditorView(QGraphicsScene* scene, QWidget* parent) : QGraphicsView(scene, parent) {
-    setRenderHint(QPainter::Antialiasing);
-    setCacheMode(QGraphicsView::CacheBackground);
-    setViewportUpdateMode(QGraphicsView::SmartViewportUpdate);
-    setDragMode(QGraphicsView::NoDrag);
-    scale(1.0, -1.0); // flip coordinate system so that y increases upwards
-    fitInView(-5, -5, 10, 10, Qt::KeepAspectRatio);
-    setInteractive(true);
-    setBackgroundBrush(QBrush(QColor(232,232,232), Qt::DiagCrossPattern));
-    setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    setSceneRect(-1000000000,-1000000000,2000000000,2000000000);
+EditorView::EditorView(World *world, QWidget *parent)
+: QGLWidget(QGLFormat(QGL::SampleBuffers), parent), m_world(world), m_pixelsPerMeter(50) {
+    setMouseTracking(true);
 }
 
-QRectF EditorView::visibleRect() {
-    QPointF tl(horizontalScrollBar()->value(), verticalScrollBar()->value());
-    QPointF br = tl + viewport()->rect().bottomRight();
-    QMatrix mat = matrix().inverted();
-    return mat.mapRect(QRectF(tl,br));
+void EditorView::mousePressEvent(QMouseEvent* event) {
+
 }
 
+void EditorView::mouseMoveEvent(QMouseEvent* event) {
+    emit mousePosChanged(mapToWorld(event->pos()));
+}
+
+void EditorView::mouseReleaseEvent(QMouseEvent* event) {
+
+}
+
+void EditorView::wheelEvent(QWheelEvent* event) {
+    
+}
+
+void EditorView::resizeEvent(QResizeEvent* event) {
+    QSize diff = size() - event->oldSize();
+    m_viewPos.ry() -= diff.height() / m_pixelsPerMeter; // anchor view at top left when resizing
+    glViewport(0, 0, width(), height());
+    updatePM();
+   
+}
+
+void EditorView::initializeGL() {
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_COLOR_MATERIAL);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glClearColor(0, 0, 0, 0);
+    m_viewPos = QPointF(-width() / 2 / m_pixelsPerMeter, 
+            -height() / 2 / m_pixelsPerMeter); // width and height aren't set correctly until this point
+    updatePM();
+}
+
+void EditorView::paintGL() {
+    glColor4ub(255,255,255,128);
+    glBegin(GL_POLYGON);
+    {
+        glVertex2f(-3,-3);
+        glVertex2f(3,-3);
+        glVertex2f(3,3);
+    }
+    glEnd();
+   
+}
+
+void EditorView::updatePM() {
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(m_viewPos.x(), m_viewPos.x() + width() / m_pixelsPerMeter,
+            m_viewPos.y(), m_viewPos.y() + height() / m_pixelsPerMeter);
+    glMatrixMode(GL_MODELVIEW);
+    
+}
+
+QPointF EditorView::mapToWorld(QPoint pos) const {
+    return QPointF(pos.x() / m_pixelsPerMeter + m_viewPos.x(), (height() - pos.y()) / m_pixelsPerMeter + m_viewPos.y());
+}
+
+/*
 void EditorView::mousePressEvent(QMouseEvent* event) {
     if(event->button() == Qt::MidButton) {
         m_lastMousePos = mapToScene(event->pos());
@@ -67,3 +115,4 @@ void EditorView::mouseMoveEvent(QMouseEvent* event) {
     }
     QGraphicsView::mouseMoveEvent(event); // propogate
 }
+ */

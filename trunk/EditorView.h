@@ -9,21 +9,36 @@
 #define	_EDITORVIEW_H
 
 #include <QtGui/QGraphicsView>
+#include <QtOpenGL/QtOpenGL>
+#include "World.h"
 
-class EditorView : public QGraphicsView {
+class EditorView : public QGLWidget {
+    Q_OBJECT
+    
 public:
-    EditorView(QGraphicsScene *scene, QWidget *parent = NULL);
-    QRectF visibleRect();
+    EditorView(World *world, QWidget *parent = NULL);
+    QPointF mapToWorld(QPoint pos) const;
+
+signals:
+    void mousePosChanged(const QPointF&);
     
 protected:
+    void initializeGL();
+    void paintGL();
+    void updatePM();
+
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent* event);
+    void resizeEvent(QResizeEvent *event);
 
 private:
+    World *m_world;
     QPointF m_lastMousePos;
     QCursor m_lastCursor;
+    qreal m_pixelsPerMeter;
+    QPointF m_viewPos;
 };
 
 #endif	/* _EDITORVIEW_H */
