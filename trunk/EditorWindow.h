@@ -77,6 +77,7 @@ private:
     QAction *rectToolAct;
     QAction *lineToolAct;
 
+    World *m_world;
     EditorScene *m_scene;
     EditorView *m_view;
     QDockWidget *m_propertyBrowserDock;

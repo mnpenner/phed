@@ -13,6 +13,8 @@
 #include <Box2D/Box2D.h>
 #include "Polygon.h"
 
+class World;
+
 class Object : public QObject, public QGraphicsPolygonItem {
     Q_OBJECT
     Q_PROPERTY(qreal    mass                READ mass);
@@ -31,6 +33,7 @@ class Object : public QObject, public QGraphicsPolygonItem {
     Q_PROPERTY(bool     isSleeping          READ isSleeping         WRITE setSleeping);
     Q_PROPERTY(bool     isSensor            READ isSensor           WRITE setSensor);
     Q_PROPERTY(bool     isStatic            READ isStatic           WRITE setStatic);
+    friend class World;
 public:
     Object() {}
     Object(b2World *world, const QPolygonF &poly);
