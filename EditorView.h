@@ -35,10 +35,12 @@ protected:
 
 private:
     World *m_world;
-    QPointF m_lastMousePos;
+    QPoint m_lastMousePos;
     QCursor m_lastCursor;
     qreal m_pixelsPerMeter;
     QPointF m_viewPos;
+    QTimer *m_redrawTimer;
+    int m_drawFPS;
 };
 
 #endif	/* _EDITORVIEW_H */

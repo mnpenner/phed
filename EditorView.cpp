@@ -12,24 +12,53 @@
 #include "EditorView.h"
 
 EditorView::EditorView(World *world, QWidget *parent)
-: QGLWidget(QGLFormat(QGL::SampleBuffers), parent), m_world(world), m_pixelsPerMeter(50) {
+: QGLWidget(QGLFormat(QGL::SampleBuffers), parent), m_world(world), m_pixelsPerMeter(50), m_drawFPS(60) {
     setMouseTracking(true);
+    m_redrawTimer = new QTimer(this);
+    connect(m_redrawTimer, SIGNAL(timeout()), this, SLOT(updateGL()));
+    m_redrawTimer->start(1000 / m_drawFPS);
 }
 
 void EditorView::mousePressEvent(QMouseEvent* event) {
-
+    if(event->button() == Qt::MidButton) {
+        m_lastCursor = cursor();
+        setCursor(Qt::ClosedHandCursor);
+        m_lastMousePos = event->pos();
+    }
 }
 
 void EditorView::mouseMoveEvent(QMouseEvent* event) {
     emit mousePosChanged(mapToWorld(event->pos()));
+    if(event->buttons() & Qt::MidButton) {
+        QPoint diff = event->pos() - m_lastMousePos;
+        m_viewPos.rx() -= diff.x() / m_pixelsPerMeter;
+        m_viewPos.ry() += diff.y() / m_pixelsPerMeter;
+        m_lastMousePos = event->pos();
+        updatePM();
+    }
 }
 
 void EditorView::mouseReleaseEvent(QMouseEvent* event) {
-
+    if(event->button() == Qt::MidButton) {
+        setCursor(m_lastCursor);
+    }
 }
 
 void EditorView::wheelEvent(QWheelEvent* event) {
-    
+    double scaleFactor = event->delta() / 100.;
+    QSizeF oldSize(width() / m_pixelsPerMeter, height() / m_pixelsPerMeter);
+
+    if(event->delta() > 0) m_pixelsPerMeter *= scaleFactor;
+    else m_pixelsPerMeter /= -scaleFactor;
+
+    QSizeF newSize(width() / m_pixelsPerMeter, height() / m_pixelsPerMeter);
+    QSizeF deltaSize = newSize - oldSize;
+    QPointF mousePos(event->x() / (qreal) width(), event->y() / (qreal) height()); // mouse pos as percent
+
+    m_viewPos.rx() -= deltaSize.width() * mousePos.x(); // anchor at mouse pos
+    m_viewPos.ry() -= deltaSize.height() * (1 - mousePos.y());
+
+    updatePM();
 }
 
 void EditorView::resizeEvent(QResizeEvent* event) {
@@ -55,6 +84,7 @@ void EditorView::initializeGL() {
 }
 
 void EditorView::paintGL() {
+    glClear(GL_COLOR_BUFFER_BIT);
     glColor4ub(255,255,255,128);
     glBegin(GL_POLYGON);
     {
