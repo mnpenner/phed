@@ -16,12 +16,22 @@ class EditorView : public QGLWidget {
     Q_OBJECT
     
 public:
+    enum Tool {
+        Select, Scroll, Lasso, Measure,
+        Pencil, Pen, Brush, Ellipse, Polygon, Rectangle, EdgeChain,
+        RevoluteJoint, PulleyJoint, PrismaticJoint, LineJoint, GearJoint
+    };
+
     EditorView(World *world, QWidget *parent = NULL);
     QPointF mapToWorld(QPoint pos) const;
 
 signals:
     void mousePosChanged(const QPointF&);
     
+public slots:
+    void setTool(Tool tool);
+    void showGrid(bool enabled);
+
 protected:
     void initializeGL();
     void paintGL();
@@ -30,17 +40,29 @@ protected:
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
+    void mouseDoubleClickEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent* event);
     void resizeEvent(QResizeEvent *event);
 
+    void drawCircle(GLfloat x, GLfloat y, GLfloat r);
+    void drawGrid();
+    void closePoly();
+
 private:
+    Tool m_tool;
     World *m_world;
     QPoint m_lastMousePos;
-    QCursor m_lastCursor;
-    qreal m_pixelsPerMeter;
+    QPointF m_mousePos;
     QPointF m_viewPos;
-    QTimer *m_redrawTimer;
+    QCursor m_lastCursor;
+    QTimer m_redrawTimer;
+    QPolygonF m_tmpPoly;
+    QColor m_tmpColor;
+    bool m_showGrid;
+    bool m_readyClosePoly;
     int m_drawFPS;
+    qreal m_pixelsPerMeter;
+    qreal m_closePolyDist;
 };
 
 #endif	/* _EDITORVIEW_H */

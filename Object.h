@@ -15,7 +15,7 @@
 
 class World;
 
-class Object : public QObject, public QGraphicsPolygonItem {
+class Object : public QObject {
     Q_OBJECT
     Q_PROPERTY(qreal    mass                READ mass);
     Q_PROPERTY(qreal    inertia             READ inertia);
@@ -33,10 +33,10 @@ class Object : public QObject, public QGraphicsPolygonItem {
     Q_PROPERTY(bool     isSleeping          READ isSleeping         WRITE setSleeping);
     Q_PROPERTY(bool     isSensor            READ isSensor           WRITE setSensor);
     Q_PROPERTY(bool     isStatic            READ isStatic           WRITE setStatic);
+    Q_PROPERTY(QColor   color               READ color              WRITE setColor);
     friend class World;
 public:
-    Object() {}
-    Object(b2World *world, const QPolygonF &poly);
+    Object(const QPolygonF &poly = QPolygonF(), QObject *parent = NULL);
 
     // read
     QPointF position() const;
@@ -55,6 +55,7 @@ public:
     bool isSensor() const;
     qreal friction() const;
     qreal restitution() const;
+    QColor color() const;
 
     // write
     void setPosition(const QPointF &pos);
@@ -71,9 +72,13 @@ public:
     void setSensor(bool flag);
     void setFriction(qreal fric);
     void setRestitution(qreal rest);
+    void setColor(const QColor &poly);
 
     // misc
     void touch() const;
+    void paintGL() const;
+    void setPolygon(const QPolygonF &poly);
+    
 
 signals:
     void propertyChanged() const;
@@ -81,6 +86,8 @@ signals:
 private:
     b2Body *m_body;
     qreal m_density;
+    QPolygonF m_poly;
+    QColor m_color;
 };
 
 

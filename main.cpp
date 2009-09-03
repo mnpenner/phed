@@ -12,6 +12,7 @@ int main(int argc, char *argv[]) {
     QCoreApplication::setOrganizationName("mnbGames");
     QCoreApplication::setOrganizationDomain("http://code.google.com/p/phed/");
     QCoreApplication::setApplicationName("Phed");
+    qsrand(QDateTime::currentDateTime().toTime_t());
 
     QApplication app(argc, argv);
     

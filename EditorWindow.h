@@ -9,7 +9,6 @@
 #define	_EDITORWINDOW_H
 
 #include <QtGui/QtGui>
-#include "EditorScene.h"
 #include "PropertyBrowser.h"
 #include "World.h"
 
@@ -79,7 +78,6 @@ private:
     QAction *lineToolAct;
 
     World *m_world;
-    EditorScene *m_scene;
     EditorView *m_view;
     QDockWidget *m_propertyBrowserDock;
     PropertyBrowser *m_propertyBrowser;

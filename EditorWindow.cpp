@@ -92,7 +92,7 @@ void EditorWindow::createActions() {
     showGridAct->setShortcut(tr("Ctrl+G"));
     showGridAct->setStatusTip(tr("Display a grid over the map"));
     showGridAct->setCheckable(true);
-    //connect(showGridAct, SIGNAL(toggled(bool)), editorView, SLOT(showGrid(bool)));
+    connect(showGridAct, SIGNAL(toggled(bool)), m_view, SLOT(showGrid(bool)));
 
     aboutAct = new QAction(tr("&About"), this);
     aboutAct->setStatusTip(tr("Show the application's About box"));
@@ -106,7 +106,7 @@ void EditorWindow::createActions() {
     selectToolAct->setShortcut(Qt::Key_S);
     selectToolAct->setCheckable(true);
     selectToolAct->setStatusTip(tr("Select objects to modify or delete"));
-    selectToolAct->setProperty("tool", EditorScene::Select);
+    selectToolAct->setProperty("tool", EditorView::Select);
     selectToolAct->setChecked(true);
 
     circleToolAct = new QAction(QIcon(":/icons/custom/ellipse.png"), tr("&Ellipse"), toolsActGroup);
@@ -114,28 +114,28 @@ void EditorWindow::createActions() {
     circleToolAct->setShortcut(Qt::Key_E);
     circleToolAct->setCheckable(true);
     circleToolAct->setStatusTip(tr("Draw ellipse objects"));
-    circleToolAct->setProperty("tool", EditorScene::Ellipse);
+    circleToolAct->setProperty("tool", EditorView::Ellipse);
 
     polygonToolAct = new QAction(QIcon(":/icons/custom/polygon.png"), tr("&Polygon"), toolsActGroup);
     polygonToolAct->setIconVisibleInMenu(false);
     polygonToolAct->setShortcut(Qt::Key_P);
     polygonToolAct->setCheckable(true);
     polygonToolAct->setStatusTip(tr("Draw polygonal objects"));
-    polygonToolAct->setProperty("tool", EditorScene::Polygon);
+    polygonToolAct->setProperty("tool", EditorView::Polygon);
 
     rectToolAct = new QAction(QIcon(":/icons/custom/rectangle.png"), tr("&Rectangle"), toolsActGroup);
     rectToolAct->setIconVisibleInMenu(false);
     rectToolAct->setShortcut(Qt::Key_R);
     rectToolAct->setCheckable(true);
     rectToolAct->setStatusTip(tr("Draw rectangle objects"));
-    rectToolAct->setProperty("tool", EditorScene::Rectangle);
+    rectToolAct->setProperty("tool", EditorView::Rectangle);
 
     lineToolAct = new QAction(QIcon(":/icons/custom/line.png"), tr("&Line"), toolsActGroup);
     lineToolAct->setIconVisibleInMenu(false);
     lineToolAct->setShortcut(Qt::Key_L);
     lineToolAct->setCheckable(true);
     lineToolAct->setStatusTip(tr("Draw lines"));
-    lineToolAct->setProperty("tool", EditorScene::EdgeChain);
+    lineToolAct->setProperty("tool", EditorView::EdgeChain);
 
     connect(toolsActGroup, SIGNAL(selected(QAction*)), this, SLOT(toolSelected(QAction*)));
 
@@ -162,7 +162,7 @@ void EditorWindow::createActions() {
 }
 
 void EditorWindow::toolSelected(QAction* act) {
-    m_scene->setTool((EditorScene::Tool)act->property("tool").toInt());
+    m_view->setTool((EditorView::Tool)act->property("tool").toInt());
 }
 
 void EditorWindow::createMenus() {
