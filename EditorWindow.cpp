@@ -14,7 +14,7 @@ EditorWindow::EditorWindow() {
     Q_INIT_RESOURCE(icons);
     setWindowTitle("Phed");
 
-    createScene();
+    createWorld();
     createDockWindows();
     createActions();
     createMenus();
@@ -24,7 +24,7 @@ EditorWindow::EditorWindow() {
     readSettings();
 }
 
-void EditorWindow::createScene() {
+void EditorWindow::createWorld() {
     m_world = new World(QPointF(0, -9.80665), this);
     m_view = new EditorView(m_world, this);
     setCentralWidget(m_view);
@@ -40,7 +40,7 @@ void EditorWindow::createDockWindows() {
     m_propertyBrowserDock->setObjectName("PropertiesDock");
     m_propertyBrowserDock->setWindowTitle("Properties");
     m_propertyBrowserDock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
-    m_propertyBrowser = new PropertyBrowser;
+    m_propertyBrowser = new PropertyBrowser(m_propertyBrowserDock);
     m_propertyBrowserDock->setWidget(m_propertyBrowser);
     addDockWidget(Qt::RightDockWidgetArea, m_propertyBrowserDock);
 }
@@ -63,157 +63,165 @@ void EditorWindow::readSettings() {
 }
 
 void EditorWindow::createActions() {
-    newAct = new QAction(QIcon(":/icons/silk/page_white.png"), tr("&New"), this);
-    newAct->setShortcuts(QKeySequence::New);
-    newAct->setStatusTip(tr("Create a new map"));
-    connect(newAct, SIGNAL(triggered()), this, SLOT(newFile()));
+    m_newAct = new QAction(QIcon(":/icons/silk/page_white.png"), tr("&New"), this);
+    m_newAct->setShortcuts(QKeySequence::New);
+    m_newAct->setStatusTip(tr("Create a new map"));
+    connect(m_newAct, SIGNAL(triggered()), this, SLOT(newFile()));
 
-    openAct = new QAction(QIcon(":/icons/silk/folder_page_white.png"), tr("&Open"), this);
-    openAct->setShortcuts(QKeySequence::Open);
-    openAct->setStatusTip(tr("Open an existing map"));
-    connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
+    m_openAct = new QAction(QIcon(":/icons/silk/folder_page_white.png"), tr("&Open"), this);
+    m_openAct->setShortcuts(QKeySequence::Open);
+    m_openAct->setStatusTip(tr("Open an existing map"));
+    connect(m_openAct, SIGNAL(triggered()), this, SLOT(open()));
 
-    saveAct = new QAction(QIcon(":/icons/silk/disk.png"), tr("&Save"), this);
-    saveAct->setShortcuts(QKeySequence::Save);
-    saveAct->setStatusTip(tr("Save the map to disk"));
-    connect(saveAct, SIGNAL(triggered()), this, SLOT(save()));
+    m_saveAct = new QAction(QIcon(":/icons/silk/disk.png"), tr("&Save"), this);
+    m_saveAct->setShortcuts(QKeySequence::Save);
+    m_saveAct->setStatusTip(tr("Save the map to disk"));
+    connect(m_saveAct, SIGNAL(triggered()), this, SLOT(save()));
 
-    saveAsAct = new QAction(tr("Save &As..."), this);
-    saveAsAct->setShortcuts(QKeySequence::SaveAs);
-    saveAsAct->setStatusTip(tr("Save the map under a new name"));
-    connect(saveAsAct, SIGNAL(triggered()), this, SLOT(saveAs()));
+    m_saveAsAct = new QAction(tr("Save &As..."), this);
+    m_saveAsAct->setShortcuts(QKeySequence::SaveAs);
+    m_saveAsAct->setStatusTip(tr("Save the map under a new name"));
+    connect(m_saveAsAct, SIGNAL(triggered()), this, SLOT(saveAs()));
 
-    exitAct = new QAction(tr("E&xit"), this);
-    exitAct->setShortcut(tr("Ctrl+Q"));
-    exitAct->setStatusTip(tr("Exit the application"));
-    connect(exitAct, SIGNAL(triggered()), this, SLOT(close()));
+    m_exitAct = new QAction(tr("E&xit"), this);
+    m_exitAct->setShortcut(tr("Ctrl+Q"));
+    m_exitAct->setStatusTip(tr("Exit the application"));
+    connect(m_exitAct, SIGNAL(triggered()), this, SLOT(close()));
 
-    showGridAct = new QAction(tr("Show &Grid"), this);
-    showGridAct->setShortcut(tr("Ctrl+G"));
-    showGridAct->setStatusTip(tr("Display a grid over the map"));
-    showGridAct->setCheckable(true);
-    connect(showGridAct, SIGNAL(toggled(bool)), m_view, SLOT(showGrid(bool)));
+    m_showGridAct = new QAction(tr("Show &Grid"), this);
+    m_showGridAct->setShortcut(tr("Ctrl+G"));
+    m_showGridAct->setStatusTip(tr("Display a grid over the map"));
+    m_showGridAct->setCheckable(true);
+    connect(m_showGridAct, SIGNAL(toggled(bool)), m_view, SLOT(showGrid(bool)));
 
-    aboutAct = new QAction(tr("&About"), this);
-    aboutAct->setStatusTip(tr("Show the application's About box"));
-    connect(aboutAct, SIGNAL(triggered()), this, SLOT(about()));
+    m_aboutAct = new QAction(tr("&About"), this);
+    m_aboutAct->setStatusTip(tr("Show the application's About box"));
+    connect(m_aboutAct, SIGNAL(triggered()), this, SLOT(about()));
 
-    toolsActGroup = new QActionGroup(this);
-    toolsActGroup->setExclusive(true);
+    m_toolsActGroup = new QActionGroup(this);
+    m_toolsActGroup->setExclusive(true);
 
-    selectToolAct = new QAction(QIcon(":/icons/custom/select.png"), tr("&Select"), toolsActGroup);
-    selectToolAct->setIconVisibleInMenu(false);
-    selectToolAct->setShortcut(Qt::Key_S);
-    selectToolAct->setCheckable(true);
-    selectToolAct->setStatusTip(tr("Select objects to modify or delete"));
-    selectToolAct->setProperty("tool", EditorView::Select);
-    selectToolAct->setChecked(true);
+    m_selectToolAct = new QAction(QIcon(":/icons/custom/select.png"), tr("&Select"), m_toolsActGroup);
+    m_selectToolAct->setIconVisibleInMenu(false);
+    m_selectToolAct->setShortcut(Qt::Key_S);
+    m_selectToolAct->setCheckable(true);
+    m_selectToolAct->setStatusTip(tr("Select objects to modify or delete"));
+    m_selectToolAct->setProperty("tool", EditorView::Select);
+    m_selectToolAct->setChecked(true);
 
-    circleToolAct = new QAction(QIcon(":/icons/custom/ellipse.png"), tr("&Ellipse"), toolsActGroup);
-    circleToolAct->setIconVisibleInMenu(false);
-    circleToolAct->setShortcut(Qt::Key_E);
-    circleToolAct->setCheckable(true);
-    circleToolAct->setStatusTip(tr("Draw ellipse objects"));
-    circleToolAct->setProperty("tool", EditorView::Ellipse);
+    m_ellipseToolAct = new QAction(QIcon(":/icons/custom/ellipse.png"), tr("&Ellipse"), m_toolsActGroup);
+    m_ellipseToolAct->setIconVisibleInMenu(false);
+    m_ellipseToolAct->setShortcut(Qt::Key_E);
+    m_ellipseToolAct->setCheckable(true);
+    m_ellipseToolAct->setStatusTip(tr("Draw ellipse objects"));
+    m_ellipseToolAct->setProperty("tool", EditorView::Ellipse);
 
-    polygonToolAct = new QAction(QIcon(":/icons/custom/polygon.png"), tr("&Polygon"), toolsActGroup);
-    polygonToolAct->setIconVisibleInMenu(false);
-    polygonToolAct->setShortcut(Qt::Key_P);
-    polygonToolAct->setCheckable(true);
-    polygonToolAct->setStatusTip(tr("Draw polygonal objects"));
-    polygonToolAct->setProperty("tool", EditorView::Polygon);
+    m_polygonToolAct = new QAction(QIcon(":/icons/custom/polygon.png"), tr("&Polygon"), m_toolsActGroup);
+    m_polygonToolAct->setIconVisibleInMenu(false);
+    m_polygonToolAct->setShortcut(Qt::Key_P);
+    m_polygonToolAct->setCheckable(true);
+    m_polygonToolAct->setStatusTip(tr("Draw polygonal objects"));
+    m_polygonToolAct->setProperty("tool", EditorView::Polygon);
 
-    rectToolAct = new QAction(QIcon(":/icons/custom/rectangle.png"), tr("&Rectangle"), toolsActGroup);
-    rectToolAct->setIconVisibleInMenu(false);
-    rectToolAct->setShortcut(Qt::Key_R);
-    rectToolAct->setCheckable(true);
-    rectToolAct->setStatusTip(tr("Draw rectangle objects"));
-    rectToolAct->setProperty("tool", EditorView::Rectangle);
+    m_rectToolAct = new QAction(QIcon(":/icons/custom/rectangle.png"), tr("&Rectangle"), m_toolsActGroup);
+    m_rectToolAct->setIconVisibleInMenu(false);
+    m_rectToolAct->setShortcut(Qt::Key_R);
+    m_rectToolAct->setCheckable(true);
+    m_rectToolAct->setStatusTip(tr("Draw rectangle objects"));
+    m_rectToolAct->setProperty("tool", EditorView::Rectangle);
 
-    lineToolAct = new QAction(QIcon(":/icons/custom/line.png"), tr("&Line"), toolsActGroup);
-    lineToolAct->setIconVisibleInMenu(false);
-    lineToolAct->setShortcut(Qt::Key_L);
-    lineToolAct->setCheckable(true);
-    lineToolAct->setStatusTip(tr("Draw lines"));
-    lineToolAct->setProperty("tool", EditorView::EdgeChain);
+    m_edgeToolAct = new QAction(QIcon(":/icons/custom/line.png"), tr("Edge &Chain"), m_toolsActGroup);
+    m_edgeToolAct->setIconVisibleInMenu(false);
+    m_edgeToolAct->setShortcut(Qt::Key_C);
+    m_edgeToolAct->setCheckable(true);
+    m_edgeToolAct->setStatusTip(tr("Draw edge chains"));
+    m_edgeToolAct->setProperty("tool", EditorView::EdgeChain);
 
-    connect(toolsActGroup, SIGNAL(selected(QAction*)), this, SLOT(toolSelected(QAction*)));
+    connect(m_toolsActGroup, SIGNAL(selected(QAction*)), this, SLOT(toolSelected(QAction*)));
 
+    m_playIcon        = style()->standardIcon(QStyle::SP_MediaPlay);
+    m_pauseIcon       = style()->standardIcon(QStyle::SP_MediaPause);
+    m_playText        = tr("&Run");
+    m_pauseText       = tr("&Pause");
+    m_playStatusTip   = tr("Run physics");
+    m_pauseStatusTip  = tr("Pause Physics");
 
-    controlActGroup = new QActionGroup(this);
-    controlActGroup->setExclusive(true);
+    m_simStateAct = new QAction(this);
+    m_simStateAct->setShortcut(Qt::Key_Space);
+    updateSimAct();
+    connect(m_simStateAct, SIGNAL(triggered()), this, SLOT(toggleSimState()));
 
-    playAct = new QAction(QIcon(":/icons/custom/media-playback-start.png"), tr("&Run"), controlActGroup);
-    playAct->setShortcut(Qt::Key_Space);
-    playAct->setCheckable(true);
-    playAct->setStatusTip(tr("Run physics"));
-    //connect(playAct, SIGNAL(triggered()), editorView, SLOT(runPhysics()));
-
-    pauseAct = new QAction(QIcon(":/icons/custom/media-playback-pause.png"), tr("&Pause"), controlActGroup);
-    pauseAct->setShortcut(Qt::Key_Space);
-    pauseAct->setCheckable(true);
-    pauseAct->setStatusTip(tr("Pause physics"));
-    //connect(pauseAct, SIGNAL(triggered()), editorView, SLOT(pausePhysics()));
-
-    connect(playAct, SIGNAL(toggled(bool)), pauseAct, SLOT(setVisible(bool))); // TODO: just swap the icon instead, and use one signal?
-    connect(pauseAct, SIGNAL(toggled(bool)), playAct, SLOT(setVisible(bool)));
-    pauseAct->setChecked(true);
-    pauseAct->setVisible(false);
+    m_propertyBrowserDock->toggleViewAction()->setText("&Properties");
 }
 
 void EditorWindow::toolSelected(QAction* act) {
     m_view->setTool((EditorView::Tool)act->property("tool").toInt());
 }
 
+void EditorWindow::updateSimAct() {
+    if(m_world->simulating()) {
+        m_simStateAct->setIcon(m_pauseIcon);
+        m_simStateAct->setText(m_pauseText);
+        m_simStateAct->setStatusTip(m_pauseStatusTip);
+    } else {
+        m_simStateAct->setIcon(m_playIcon);
+        m_simStateAct->setText(m_playText);
+        m_simStateAct->setStatusTip(m_playStatusTip);
+    }
+}
+
+void EditorWindow::toggleSimState() {
+    m_world->setSimulating(!m_world->simulating());
+    updateSimAct();
+}
+
 void EditorWindow::createMenus() {
-    fileMenu = menuBar()->addMenu(tr("&File"));
-    fileMenu->addAction(newAct);
-    fileMenu->addAction(openAct);
-    fileMenu->addAction(saveAct);
-    fileMenu->addAction(saveAsAct);
-    fileMenu->addSeparator();
-    fileMenu->addAction(exitAct);
+    m_fileMenu = menuBar()->addMenu(tr("&File"));
+    m_fileMenu->addAction(m_newAct);
+    m_fileMenu->addAction(m_openAct);
+    m_fileMenu->addAction(m_saveAct);
+    m_fileMenu->addAction(m_saveAsAct);
+    m_fileMenu->addSeparator();
+    m_fileMenu->addAction(m_exitAct);
 
-    viewMenu = menuBar()->addMenu(tr("&View"));
-    viewMenu->addAction(showGridAct);
+    m_viewMenu = menuBar()->addMenu(tr("&View"));
+    m_viewMenu->addAction(m_showGridAct);
 
-    controlMenu = menuBar()->addMenu(tr("&Control"));
-    controlMenu->addAction(playAct);
-    controlMenu->addAction(pauseAct);
+    m_simMenu = menuBar()->addMenu(tr("&Simulation"));
+    m_simMenu->addAction(m_simStateAct);
 
-    toolsMenu = menuBar()->addMenu(tr("&Tools"));
-    toolsMenu->addAction(selectToolAct);
-    toolsMenu->addAction(circleToolAct);
-    toolsMenu->addAction(rectToolAct);
-    toolsMenu->addAction(polygonToolAct);
-    toolsMenu->addAction(lineToolAct);
+    m_toolsMenu = menuBar()->addMenu(tr("&Tools"));
+    m_toolsMenu->addAction(m_selectToolAct);
+    m_toolsMenu->addAction(m_ellipseToolAct);
+    m_toolsMenu->addAction(m_rectToolAct);
+    m_toolsMenu->addAction(m_polygonToolAct);
+    m_toolsMenu->addAction(m_edgeToolAct);
 
-    windowsMenu = menuBar()->addMenu(tr("&Window"));
-    windowsMenu->addAction(m_propertyBrowserDock->toggleViewAction());
+    m_windowsMenu = menuBar()->addMenu(tr("&Window"));
+    m_windowsMenu->addAction(m_propertyBrowserDock->toggleViewAction());
 
-    helpMenu = menuBar()->addMenu(tr("&Help"));
-    helpMenu->addAction(aboutAct);
+    m_helpMenu = menuBar()->addMenu(tr("&Help"));
+    m_helpMenu->addAction(m_aboutAct);
 }
 
 void EditorWindow::createToolBars() {
-    fileToolBar = addToolBar(tr("File"));
-    fileToolBar->setObjectName("FileToolBar");
-    fileToolBar->addAction(newAct);
-    fileToolBar->addAction(openAct);
-    fileToolBar->addAction(saveAct);
+    m_fileToolBar = addToolBar(tr("File"));
+    m_fileToolBar->setObjectName("FileToolBar");
+    m_fileToolBar->addAction(m_newAct);
+    m_fileToolBar->addAction(m_openAct);
+    m_fileToolBar->addAction(m_saveAct);
 
-    controlToolBar = addToolBar(tr("Controls"));
-    controlToolBar->setObjectName("ControlToolBar");
-    controlToolBar->addAction(playAct);
-    controlToolBar->addAction(pauseAct);
+    m_simToolBar = addToolBar(tr("Simulation"));
+    m_simToolBar->setObjectName("SimToolBar");
+    m_simToolBar->addAction(m_simStateAct);
 
-    toolsToolBar = addToolBar(tr("Tools"));
-    toolsToolBar->setObjectName("ToolsToolBar");
-    toolsToolBar->addAction(selectToolAct);
-    toolsToolBar->addAction(circleToolAct);
-    toolsToolBar->addAction(rectToolAct);
-    toolsToolBar->addAction(polygonToolAct);
-    toolsToolBar->addAction(lineToolAct);
+    m_toolsToolBar = addToolBar(tr("Tools"));
+    m_toolsToolBar->setObjectName("ToolsToolBar");
+    m_toolsToolBar->addAction(m_selectToolAct);
+    m_toolsToolBar->addAction(m_ellipseToolAct);
+    m_toolsToolBar->addAction(m_rectToolAct);
+    m_toolsToolBar->addAction(m_polygonToolAct);
+    m_toolsToolBar->addAction(m_edgeToolAct);
 }
 
 void EditorWindow::createStatusBar() {
@@ -235,7 +243,10 @@ bool EditorWindow::saveAs() {
 }
 
 void EditorWindow::about() {
-    QMessageBox::about(this, "About Q2D", "<b>Q2D</b> is a Box2D map editor written by Mark Bayazit.");
+    QMessageBox::about(this, "About Phed", "<b>Phed</b> is an open source cross-"
+            "platform map editor with a built-in physics simulator, written in "
+            "C++. It uses Qt (Nokia) for the GUI, and Box2D (Erin Catto) for "
+            "physics. It is being developed by Mark Bayazit.");
 }
 
 void EditorWindow::mapWasModified() {

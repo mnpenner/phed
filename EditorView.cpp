@@ -30,7 +30,7 @@ void EditorView::mousePressEvent(QMouseEvent* event) {
                         closePoly();
                     } else {
                         if(m_tmpPoly.isEmpty()) {
-                            m_tmpColor.setHsv(qrand()%360, qrand()%192+64, qrand()%128+128);
+                            m_tmpColor.setHsv(qrand()%360, qrand()%192+64, qrand()%64+192);
                             m_tmpPoly.append(mousePos);
                         } else if(mousePos != m_tmpPoly.last()) {
                             m_tmpPoly.append(mousePos);
