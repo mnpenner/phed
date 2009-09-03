@@ -10,31 +10,77 @@
 #include <QtGui/QMouseEvent>
 #include <qt4/QtGui/qabstractslider.h>
 #include "EditorView.h"
+#include "Object.h"
 
 EditorView::EditorView(World *world, QWidget *parent)
-: QGLWidget(QGLFormat(QGL::SampleBuffers), parent), m_world(world), m_pixelsPerMeter(50), m_drawFPS(60) {
+: QGLWidget(QGLFormat(QGL::DoubleBuffer), parent), m_world(world), m_showGrid(false),
+        m_drawFPS(60), m_pixelsPerMeter(50), m_closePolyDist(7.5) {
     setMouseTracking(true);
-    m_redrawTimer = new QTimer(this);
-    connect(m_redrawTimer, SIGNAL(timeout()), this, SLOT(updateGL()));
-    m_redrawTimer->start(1000 / m_drawFPS);
+    m_redrawTimer.start(1000 / m_drawFPS);
+    connect(&m_redrawTimer, SIGNAL(timeout()), this, SLOT(updateGL()));
 }
 
 void EditorView::mousePressEvent(QMouseEvent* event) {
-    if(event->button() == Qt::MidButton) {
-        m_lastCursor = cursor();
-        setCursor(Qt::ClosedHandCursor);
-        m_lastMousePos = event->pos();
+    QPointF mousePos = mapToWorld(event->pos());
+    switch(event->button()) {
+        case Qt::LeftButton:
+            switch(m_tool) {
+                case Polygon:
+                    if(m_readyClosePoly) {
+                        closePoly();
+                    } else {
+                        if(m_tmpPoly.isEmpty()) {
+                            m_tmpColor.setHsv(qrand()%360, qrand()%192+64, qrand()%128+128);
+                            m_tmpPoly.append(mousePos);
+                        } else if(mousePos != m_tmpPoly.last()) {
+                            m_tmpPoly.append(mousePos);
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case Qt::MidButton:
+            m_lastCursor = cursor();
+            setCursor(Qt::ClosedHandCursor);
+            m_lastMousePos = event->pos();
+            break;
+        case Qt::RightButton:
+            if(m_tool == Polygon && !m_tmpPoly.isEmpty()) {
+                m_tmpPoly.pop_back();
+            }
+            break;
+        default:
+            break;
     }
 }
 
+void EditorView::mouseDoubleClickEvent(QMouseEvent* event) {
+    if(event->button() == Qt::LeftButton && m_tool == Polygon && m_tmpPoly.size() >= 3) {
+        closePoly();
+    }
+}
+
+void EditorView::closePoly() {
+    Object *obj = new Object(m_tmpPoly, m_world);
+    obj->setColor(m_tmpColor);
+    m_world->addObject(obj);
+    m_tmpPoly.clear();
+}
+
 void EditorView::mouseMoveEvent(QMouseEvent* event) {
-    emit mousePosChanged(mapToWorld(event->pos()));
+    m_mousePos = mapToWorld(event->pos());
+    emit mousePosChanged(m_mousePos);
     if(event->buttons() & Qt::MidButton) {
         QPoint diff = event->pos() - m_lastMousePos;
         m_viewPos.rx() -= diff.x() / m_pixelsPerMeter;
         m_viewPos.ry() += diff.y() / m_pixelsPerMeter;
         m_lastMousePos = event->pos();
         updatePM();
+    }
+    if(m_tool == Polygon) {
+        m_readyClosePoly = (m_tmpPoly.size() >= 3 && QLineF(m_mousePos, m_tmpPoly.first()).length() * m_pixelsPerMeter <= m_closePolyDist);
     }
 }
 
@@ -51,9 +97,12 @@ void EditorView::wheelEvent(QWheelEvent* event) {
     if(event->delta() > 0) m_pixelsPerMeter *= scaleFactor;
     else m_pixelsPerMeter /= -scaleFactor;
 
+    if(m_pixelsPerMeter > 500) m_pixelsPerMeter = 500;
+    else if(m_pixelsPerMeter < 10) m_pixelsPerMeter = 10;
+
     QSizeF newSize(width() / m_pixelsPerMeter, height() / m_pixelsPerMeter);
     QSizeF deltaSize = newSize - oldSize;
-    QPointF mousePos(event->x() / (qreal) width(), event->y() / (qreal) height()); // mouse pos as percent
+    QPointF mousePos(event->x() / (qreal) width(), event->y() / (qreal) height()); // calc mouse pos as percent
 
     m_viewPos.rx() -= deltaSize.width() * mousePos.x(); // anchor at mouse pos
     m_viewPos.ry() -= deltaSize.height() * (1 - mousePos.y());
@@ -66,7 +115,6 @@ void EditorView::resizeEvent(QResizeEvent* event) {
     m_viewPos.ry() -= diff.height() / m_pixelsPerMeter; // anchor view at top left when resizing
     glViewport(0, 0, width(), height());
     updatePM();
-   
 }
 
 void EditorView::initializeGL() {
@@ -76,24 +124,85 @@ void EditorView::initializeGL() {
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_COLOR_MATERIAL);
     glEnable(GL_BLEND);
+    glEnable(GL_LINE_SMOOTH);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glClearColor(0, 0, 0, 0);
+    glLineWidth(1.5);
+    glLineStipple(1, 0x1111);
     m_viewPos = QPointF(-width() / 2 / m_pixelsPerMeter, 
-            -height() / 2 / m_pixelsPerMeter); // width and height aren't set correctly until this point
+            -height() / 2 / m_pixelsPerMeter); // width and height aren't fully initialized in constructor
     updatePM();
 }
 
 void EditorView::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT);
-    glColor4ub(255,255,255,128);
-    glBegin(GL_POLYGON);
-    {
-        glVertex2f(-3,-3);
-        glVertex2f(3,-3);
-        glVertex2f(3,3);
+
+    foreach(Object *obj, m_world->objects()) { // TODO: query the world for visible objects first!
+        obj->paintGL();
+    }
+
+    if(m_tmpPoly.size() >= 1) {
+        glColor3ub(m_tmpColor.red(), m_tmpColor.green(), m_tmpColor.blue());
+        if(m_tmpPoly.size() >= 2) {
+            glBegin(GL_LINE_STRIP);
+            foreach(QPointF vert, m_tmpPoly) {
+                glVertex2f(vert.x(), vert.y());
+            }
+            glEnd();
+            
+        }
+        glEnable(GL_LINE_STIPPLE);
+        glBegin(GL_LINES);
+        {
+            glVertex2f(m_tmpPoly.last().x(), m_tmpPoly.last().y());
+            glVertex2f(m_mousePos.x(), m_mousePos.y());
+        }
+        glEnd();
+        glDisable(GL_LINE_STIPPLE);
+
+        if(m_readyClosePoly) {
+            glColor3ub(255, 255, 255);
+            drawCircle(m_tmpPoly.first().x(), m_tmpPoly.first().y(), m_closePolyDist / m_pixelsPerMeter);
+        }
+    }
+
+    if(m_showGrid) drawGrid();
+}
+
+void EditorView::showGrid(bool flag) {
+    m_showGrid = flag;
+}
+
+void EditorView::drawGrid() {
+    glDisable(GL_LINE_SMOOTH);
+    glLineWidth(1);
+    glColor4ub(128, 128, 128, 128);
+    float xMin, xMax, yMin, yMax;
+
+    // vertical lines
+    glBegin(GL_LINES);
+    xMin = ceil(m_viewPos.x());
+    xMax = floor(m_viewPos.x() + width() / m_pixelsPerMeter);
+    yMin = m_viewPos.y();
+    yMax = m_viewPos.y() + height() / m_pixelsPerMeter;
+    for(int i = xMin; i <= xMax; ++i) {
+        glVertex2f(i, yMin);
+        glVertex2f(i, yMax);
     }
     glEnd();
-   
+
+    // horizontal lines
+    glBegin(GL_LINES);
+    xMin = m_viewPos.x();
+    xMax = m_viewPos.x() + width() / m_pixelsPerMeter;
+    yMin = ceil(m_viewPos.y());
+    yMax = floor(m_viewPos.y() + height() / m_pixelsPerMeter);
+    for(int i = yMin; i <= yMax; ++i) {
+        glVertex2f(xMin, i);
+        glVertex2f(xMax, i);
+    }
+    glEnd();
+    glEnable(GL_LINE_SMOOTH);
 }
 
 void EditorView::updatePM() {
@@ -109,40 +218,24 @@ QPointF EditorView::mapToWorld(QPoint pos) const {
     return QPointF(pos.x() / m_pixelsPerMeter + m_viewPos.x(), (height() - pos.y()) / m_pixelsPerMeter + m_viewPos.y());
 }
 
-/*
-void EditorView::mousePressEvent(QMouseEvent* event) {
-    if(event->button() == Qt::MidButton) {
-        m_lastMousePos = mapToScene(event->pos());
-        m_lastCursor = cursor();
-        setCursor(Qt::ClosedHandCursor);
-    } else {
-        QGraphicsView::mousePressEvent(event); // propogate
+void EditorView::setTool(Tool tool) {
+    m_tool = tool;
+    switch(tool) {
+        case Polygon:
+            setCursor(Qt::CrossCursor);
+            break;
+        default:
+            setCursor(Qt::ArrowCursor);
+            break;
     }
 }
 
-void EditorView::mouseReleaseEvent(QMouseEvent* event) {
-    if(event->button() == Qt::MidButton) {
-        setCursor(m_lastCursor);
-    } else {
-        QGraphicsView::mouseReleaseEvent(event); // propogate
+void EditorView::drawCircle(GLfloat x, GLfloat y, GLfloat r) {
+    static const double inc = M_PI / 12;
+    static const double max = 2 * M_PI;
+    glBegin(GL_LINE_LOOP);
+    for(double d = 0; d < max; d += inc) {
+        glVertex2f(cos(d) * r + x, sin(d) * r + y);
     }
+    glEnd();
 }
-
-void EditorView::wheelEvent(QWheelEvent* event) {
-    qreal factor;
-    if(event->delta() > 0) factor = event->delta() / 100.;
-    else factor = -100. / event->delta();
-    setTransformationAnchor(QGraphicsView::AnchorUnderMouse);
-    scale(factor, factor); // TODO: cap when whole scene is visible
-}
-
-void EditorView::mouseMoveEvent(QMouseEvent* event) {
-    if(event->buttons() & Qt::MidButton) {
-        QPointF pos = mapToScene(event->pos());
-        QPointF diff = pos - m_lastMousePos;
-        setTransformationAnchor(QGraphicsView::NoAnchor);
-        translate(diff.x(), diff.y());
-    }
-    QGraphicsView::mouseMoveEvent(event); // propogate
-}
- */
