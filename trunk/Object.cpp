@@ -12,7 +12,12 @@
 #include <QtOpenGL/QtOpenGL>
 #include "Object.h"
 
+#define RAD2DEG 57.2957795
+
+int Object::m_count = 0;
+
 Object::Object(const QPolygonF& poly, QObject *parent) : QObject(parent), m_body(NULL), m_density(1.0), m_poly(poly), m_color(255,255,255)  {
+    setObjectName(tr("object%1").arg(m_count++));
 }
 
 void Object::setPolygon(const QPolygonF& poly) {
@@ -42,7 +47,7 @@ void Object::setPosition(const QPointF &pos) {
     const b2Vec2 newPos = b2Vec2(pos.x(), pos.y());
     const b2Vec2 &oldPos = m_body->GetPosition();
     if((newPos.x != oldPos.x) || (newPos.y != oldPos.y)) {
-        m_body->SetXForm(newPos, m_body->GetAngle());
+        m_body->SetTransform(newPos, m_body->GetAngle());
         emit propertyChanged();
     }
 }
@@ -55,7 +60,7 @@ qreal Object::angle() const {
 void Object::setAngle(qreal ang) {
     Q_ASSERT(m_body != NULL);
     if(ang != angle()) {
-        m_body->SetXForm(m_body->GetPosition(), ang);
+        m_body->SetTransform(m_body->GetPosition(), ang);
         emit propertyChanged();
     }
 }
@@ -246,40 +251,49 @@ void Object::setRestitution(qreal rest) {
 
 void Object::paintGL() const {
     Q_ASSERT(m_body != NULL);
-    const b2Transform& xf = m_body->GetTransform();
+    glPushMatrix();
 
+    const b2Vec2 &pos = m_body->GetPosition();
+    glTranslatef(pos.x, pos.y, 0);
+    glRotatef(m_body->GetAngle()*RAD2DEG, 0, 0, 1);
+
+    glColor4ub(m_color.red(), m_color.green(), m_color.blue(), 64);
     for(b2Fixture *f = m_body->GetFixtureList(); f; f = f->GetNext()) {
-        b2Vec2 center;
-        b2PolygonShape* poly;
-        int32 vertexCount;
-        b2Vec2 vertices[b2_maxPolygonVertices];
-
         switch(f->GetType()) {
             case b2Shape::e_polygon:
+            {
+                b2PolygonShape* poly;
+                int32 vertexCount;
                 poly = static_cast<b2PolygonShape*>(f->GetShape());
                 vertexCount = poly->m_vertexCount;
                 b2Assert(vertexCount <= b2_maxPolygonVertices);
-
-                for(int32 i = 0; i < vertexCount; ++i) {
-                    vertices[i] = b2Mul(xf, poly->m_vertices[i]);
-                }
-
-                glColor4ub(m_color.red(), m_color.green(), m_color.blue(), 64);
+                
                 glBegin(GL_POLYGON);
                 for(int32 i = 0; i < vertexCount; ++i) {
-                    glVertex2f(vertices[i].x, vertices[i].y);
-                }
-                glEnd();
-
-                glColor4ub(m_color.red(), m_color.green(), m_color.blue(), 255);
-                glBegin(GL_LINE_LOOP);
-                for(int32 i = 0; i < vertexCount; ++i) {
-                    glVertex2f(vertices[i].x, vertices[i].y);
+                    glVertex2f(poly->m_vertices[i].x, poly->m_vertices[i].y);
                 }
                 glEnd();
                 break;
+            }
             default:
+                Q_ASSERT_X(false, "Object::paintGL", "Unhandled shape type");
                 break;
         }
     }
+
+    if(m_selected) {
+        glLineWidth(3);
+        glColor3ub(255, 255, 255);
+    } else {
+        glLineWidth(1.5);
+        glColor3ub(m_color.red(), m_color.green(), m_color.blue());
+    }
+    glBegin(GL_LINE_LOOP);
+    foreach(QPointF v, m_poly) {
+        glVertex2f(v.x(), v.y());
+    }
+    glEnd();
+
+
+    glPopMatrix();
 }

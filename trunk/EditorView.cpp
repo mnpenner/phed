@@ -25,6 +25,9 @@ void EditorView::mousePressEvent(QMouseEvent* event) {
     switch(event->button()) {
         case Qt::LeftButton:
             switch(m_tool) {
+                case Select:
+                    m_world->setSelectedObjects(m_world->query(mousePos));
+                    break;
                 case Polygon:
                     if(m_readyClosePoly) {
                         closePoly();
@@ -67,6 +70,10 @@ void EditorView::closePoly() {
     obj->setColor(m_tmpColor);
     m_world->addObject(obj);
     m_tmpPoly.clear();
+
+    QList<Object*> objs;
+    objs.push_back(obj);
+    m_world->setSelectedObjects(objs);
 }
 
 void EditorView::mouseMoveEvent(QMouseEvent* event) {
@@ -142,6 +149,7 @@ void EditorView::paintGL() {
     }
 
     if(m_tmpPoly.size() >= 1) {
+        glLineWidth(1.5);
         glColor3ub(m_tmpColor.red(), m_tmpColor.green(), m_tmpColor.blue());
         if(m_tmpPoly.size() >= 2) {
             glBegin(GL_LINE_STRIP);

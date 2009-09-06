@@ -30,7 +30,7 @@ QString PropertyBrowser::humanize(QString str) const {
     return str.at(0).toUpper() + str.mid(1).replace(QRegExp("([a-z])([A-Z])"), "\\1 \\2");
 }
 
-void PropertyBrowser::setSelectedObjects(QList<QObject*> objs) {
+void PropertyBrowser::setSelectedObjects(const QList<QObject*> &objs) {
     foreach(QObject *obj, m_selectedObjects) {
         disconnect(obj, SIGNAL(propertyChanged()), this, SLOT(objectUpdated()));
     }
