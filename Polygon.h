@@ -13,10 +13,6 @@
 class Polygon : public QPolygonF {
 public:
 
-    enum Orientation {
-        CW, CCW
-    };
-
     Polygon();
     Polygon(int size);
     Polygon(const QPolygonF & polygon);
@@ -26,7 +22,7 @@ public:
     const QPointF& at(int i) const;
     Polygon ccw() const;
     Polygon copy(int i, int j) const;
-    Orientation orientation() const;
+    bool isCW() const;
     bool canSee(int i, int j) const;
     bool isConvex() const;
     bool left(int i) const;

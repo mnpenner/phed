@@ -86,8 +86,10 @@ signals:
 private:
     b2Body *m_body;
     qreal m_density;
-    QPolygonF m_poly;
+    Polygon m_poly;
     QColor m_color;
+    static int m_count;
+    bool m_selected;
 };
 
 

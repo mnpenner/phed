@@ -6,6 +6,7 @@
  */
 
 #include <QtGui/QtGui>
+#include <Box2D/Box2D.h>
 #include "EditorWindow.h"
 #include "EditorView.h"
 #include "PropertiesWindow.h"
@@ -29,6 +30,7 @@ void EditorWindow::createWorld() {
     m_view = new EditorView(m_world, this);
     setCentralWidget(m_view);
     connect(m_view, SIGNAL(mousePosChanged(QPointF)), this, SLOT(mousePosChanged(QPointF)));
+    connect(m_world, SIGNAL(objectsSelected(QList<Object*>)), this, SLOT(objectsSelected(QList<Object*>)));
 }
 
 void EditorWindow::mousePosChanged(const QPointF &pos) {
@@ -85,7 +87,7 @@ void EditorWindow::createActions() {
 
     m_exitAct = new QAction(tr("E&xit"), this);
     m_exitAct->setShortcut(tr("Ctrl+Q"));
-    m_exitAct->setStatusTip(tr("Exit the application"));
+    m_exitAct->setStatusTip(tr("Exit Phed"));
     connect(m_exitAct, SIGNAL(triggered()), this, SLOT(close()));
 
     m_showGridAct = new QAction(tr("Show &Grid"), this);
@@ -95,7 +97,7 @@ void EditorWindow::createActions() {
     connect(m_showGridAct, SIGNAL(toggled(bool)), m_view, SLOT(showGrid(bool)));
 
     m_aboutAct = new QAction(tr("&About"), this);
-    m_aboutAct->setStatusTip(tr("Show the application's About box"));
+    m_aboutAct->setStatusTip(tr("About Phed"));
     connect(m_aboutAct, SIGNAL(triggered()), this, SLOT(about()));
 
     m_toolsActGroup = new QActionGroup(this);
@@ -242,11 +244,23 @@ bool EditorWindow::saveAs() {
     return false;
 }
 
+void EditorWindow::objectsSelected(const QList<Object*>& objs) {
+    QList<QObject*> qobjs;
+    foreach(Object *obj, objs) { // I don't really like casting the entire array this way, but I'm not sure what else to do
+        qobjs.append(dynamic_cast<QObject*>(obj));
+    }
+    m_propertyBrowser->setSelectedObjects(qobjs);
+}
+
 void EditorWindow::about() {
-    QMessageBox::about(this, "About Phed", "<b>Phed</b> is an open source cross-"
+    QString b2_ver_str = tr("%1.%2.%3").arg(b2_version.major).arg(b2_version.minor).arg(b2_version.revision);
+    QMessageBox::about(this, "About", "<b>Phed</b> is an open source cross-"
             "platform map editor with a built-in physics simulator, written in "
             "C++. It uses Qt (Nokia) for the GUI, and Box2D (Erin Catto) for "
-            "physics. It is being developed by Mark Bayazit.");
+            "physics. It is being developed by Mark Bayazit."
+            "<br/><br/>"
+            "<b>Qt version:</b> "+tr(QT_VERSION_STR)+"<br/>"
+            "<b>Box2D version:</b> "+b2_ver_str);
 }
 
 void EditorWindow::mapWasModified() {

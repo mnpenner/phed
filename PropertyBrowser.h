@@ -15,7 +15,7 @@ class PropertyBrowser : public QtTreePropertyBrowser {
     Q_OBJECT
 public:
     PropertyBrowser(QWidget *parent = NULL);
-    void setSelectedObjects(QList<QObject*> objs);
+    void setSelectedObjects(const QList<QObject*> &objs);
 
 private slots:
     void valueChanged(QtProperty *property, const QVariant &value);

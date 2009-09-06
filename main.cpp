@@ -4,7 +4,6 @@
  *
  * Created on August 9, 2009, 5:51 PM
  */
-
 #include <QtGui/QApplication>
 #include "EditorWindow.h"
 

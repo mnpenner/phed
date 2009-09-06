@@ -34,20 +34,19 @@ const QPointF& Polygon::at(int i) const {
     return(*this)[i < 0 ? s - (-i % s) : i % s];
 }
 
-Polygon::Orientation Polygon::orientation() const {
+bool Polygon::isCW() const {
     int br = 0;
     for(int i = 1; i < size(); ++i) {
         if((*this)[i].y() < (*this)[br].y() || ((*this)[i].y() == (*this)[br].y() && (*this)[i].x() > (*this)[br].x())) {
             br = i;
         }
     }
-    if(right(br)) return CW;
-    else return CCW;
+    return right(br);
 }
 
 Polygon Polygon::ccw() const {
     Polygon ccw(size());
-    if(orientation() == CW) std::reverse_copy(begin(), end(), ccw.begin());
+    if(isCW()) std::reverse_copy(begin(), end(), ccw.begin());
     else std::copy(begin(), end(), ccw.begin());
     return ccw;
 }
@@ -55,6 +54,7 @@ Polygon Polygon::ccw() const {
 Polygon Polygon::copy(int i, int j) const {
     Polygon p;
     while(j < i) j += size();
+    p.reserve(j - i + 1);
     for(; i <= j; ++i) {
         p.append(at(i));
     }
@@ -68,7 +68,7 @@ bool Polygon::isConvex() const { // precondition: ccw
     return true;
 }
 
-QList<Polygon> Polygon::decomp() const { // precondition: ccw
+QList<Polygon> Polygon::decomp() const { // precondition: ccw; see mnbayazit.com/406/bayazit for details about how this works
     QList<Polygon> list;
     qreal d, dist1, dist2;
     QPointF ip, ip1, ip2; // intersection points
