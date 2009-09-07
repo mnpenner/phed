@@ -52,6 +52,12 @@ void Object::setPosition(const QPointF &pos) {
     }
 }
 
+void Object::translate(const QPointF &amount) {
+    Q_ASSERT(m_body != NULL);
+    m_body->SetTransform(m_body->GetPosition() + b2Vec2(amount.x(), amount.y()), m_body->GetAngle());
+    emit propertyChanged();
+}
+
 qreal Object::angle() const {
     Q_ASSERT(m_body != NULL);
     return m_body->GetAngle();
@@ -266,7 +272,6 @@ void Object::paintGL() const {
                 int32 vertexCount;
                 poly = static_cast<b2PolygonShape*>(f->GetShape());
                 vertexCount = poly->m_vertexCount;
-                b2Assert(vertexCount <= b2_maxPolygonVertices);
                 
                 glBegin(GL_POLYGON);
                 for(int32 i = 0; i < vertexCount; ++i) {
@@ -288,6 +293,7 @@ void Object::paintGL() const {
         glLineWidth(1.5);
         glColor3ub(m_color.red(), m_color.green(), m_color.blue());
     }
+
     glBegin(GL_LINE_LOOP);
     foreach(QPointF v, m_poly) {
         glVertex2f(v.x(), v.y());

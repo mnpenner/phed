@@ -51,7 +51,7 @@ protected:
 private:
     Tool m_tool;
     World *m_world;
-    QPoint m_lastMousePos;
+    QPointF m_lastMousePos;
     QPointF m_mousePos;
     QPointF m_viewPos;
     QCursor m_lastCursor;

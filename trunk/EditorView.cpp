@@ -22,6 +22,7 @@ EditorView::EditorView(World *world, QWidget *parent)
 
 void EditorView::mousePressEvent(QMouseEvent* event) {
     QPointF mousePos = mapToWorld(event->pos());
+    m_lastMousePos = mousePos;
     switch(event->button()) {
         case Qt::LeftButton:
             switch(m_tool) {
@@ -47,7 +48,6 @@ void EditorView::mousePressEvent(QMouseEvent* event) {
         case Qt::MidButton:
             m_lastCursor = cursor();
             setCursor(Qt::ClosedHandCursor);
-            m_lastMousePos = event->pos();
             break;
         case Qt::RightButton:
             if(m_tool == Polygon && !m_tmpPoly.isEmpty()) {
@@ -79,16 +79,20 @@ void EditorView::closePoly() {
 void EditorView::mouseMoveEvent(QMouseEvent* event) {
     m_mousePos = mapToWorld(event->pos());
     emit mousePosChanged(m_mousePos);
+    QPointF mouseDiff = mapToWorld(event->pos()) - m_lastMousePos;
+    if(m_tool == Select && event->buttons() & Qt::LeftButton) {
+        foreach(Object *obj, m_world->selectedObjects()) {
+            obj->translate(mouseDiff);
+        }
+    }
     if(event->buttons() & Qt::MidButton) {
-        QPoint diff = event->pos() - m_lastMousePos;
-        m_viewPos.rx() -= diff.x() / m_pixelsPerMeter;
-        m_viewPos.ry() += diff.y() / m_pixelsPerMeter;
-        m_lastMousePos = event->pos();
+        m_viewPos -= mouseDiff;
         updatePM();
     }
     if(m_tool == Polygon) {
         m_readyClosePoly = (m_tmpPoly.size() >= 3 && QLineF(m_mousePos, m_tmpPoly.first()).length() * m_pixelsPerMeter <= m_closePolyDist);
     }
+    m_lastMousePos = mapToWorld(event->pos());
 }
 
 void EditorView::mouseReleaseEvent(QMouseEvent* event) {
