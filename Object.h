@@ -77,6 +77,7 @@ public:
     // misc
     void touch() const;
     void paintGL() const;
+    void translate(const QPointF &amount);
     void setPolygon(const QPolygonF &poly);
     
 
