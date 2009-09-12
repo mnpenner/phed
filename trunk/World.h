@@ -12,6 +12,7 @@
 #include <QtCore/QObject>
 #include <QtCore/QPointF>
 #include <QtCore/QRectF>
+#include <QtCore/QSet>
 #include <Box2D/Box2D.h>
 
 class Object;
@@ -34,10 +35,10 @@ public:
     // misc
     void addObject(Object*);
     const QList<Object*>& objects() const;
-    const QList<Object*>& selectedObjects() const;
-    void setSelectedObjects(const QList<Object*>&);
-    const QList<Object*>& query(const QPointF& point, bool multiSelect = false);
-    const QList<Object*>& query(const QRectF& rect, bool multiSelect = true);
+    const QList<QObject*>& selectedObjects() const;
+    void setSelectedObjects(const QSet<Object*>&);
+    const QSet<Object*>& query(const QPointF& point, int maxResults = 1);
+    const QSet<Object*>& query(const QRectF& rect, int maxResults = 0);
 
 
 protected:
@@ -45,7 +46,7 @@ protected:
 
 signals:
     void propertyChanged() const;
-    void objectsSelected(const QList<Object*>&);
+    void objectsSelected(const QList<QObject*>&);
 
 protected slots:
     void simStep();
@@ -53,11 +54,12 @@ protected slots:
 private:
     b2World m_world;
     QList<Object*> m_objects;
-    QList<Object*> m_selectedObjects;
-    QList<Object*> m_queriedObjects;
+    QList<QObject*> m_selectedObjects;
+    QSet<Object*> m_queryResult;
     QTimer m_physTimer;
     int m_physFPS;
-    bool m_multiSelect;
+    int m_queryResultsLimit;
+    b2PolygonShape m_queryPoly;
 };
 
 #endif	/* _WORLD_H */

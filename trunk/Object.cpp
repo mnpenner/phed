@@ -36,18 +36,15 @@ void Object::setColor(const QColor &col) {
     }
 }
 
-QPointF Object::position() const {
+Point Object::position() const {
     Q_ASSERT(m_body != NULL);
-    const b2Vec2 &p = m_body->GetPosition();
-    return QPointF(p.x, p.y);
+    return m_body->GetPosition();
 }
 
-void Object::setPosition(const QPointF &pos) {
+void Object::setPosition(const Point &pos) {
     Q_ASSERT(m_body != NULL);
-    const b2Vec2 newPos = b2Vec2(pos.x(), pos.y());
-    const b2Vec2 &oldPos = m_body->GetPosition();
-    if((newPos.x != oldPos.x) || (newPos.y != oldPos.y)) {
-        m_body->SetTransform(newPos, m_body->GetAngle());
+    if(pos != (Point)m_body->GetPosition()) {
+        m_body->SetTransform(pos, m_body->GetAngle());
         emit propertyChanged();
     }
 }
@@ -286,7 +283,7 @@ void Object::paintGL() const {
         }
     }
 
-    if(m_selected) {
+    if(property("selected").toBool()) {
         glLineWidth(3);
         glColor3ub(255, 255, 255);
     } else {

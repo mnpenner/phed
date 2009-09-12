@@ -9,6 +9,7 @@
 #define	_POLYGON_H
 
 #include <QtGui/QPolygonF>
+#include <Box2D/Collision/Shapes/b2PolygonShape.h>
 
 class Polygon : public QPolygonF {
 public:
@@ -39,6 +40,7 @@ public:
     static bool collinear(const QPointF &a, const QPointF &b, const QPointF &c);
     static qreal area(const QPointF &a, const QPointF &b, const QPointF &c);
     static qreal sqdist(const QPointF &a, const QPointF &b);
+    operator b2PolygonShape() const;
 };
 
 

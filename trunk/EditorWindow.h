@@ -35,7 +35,7 @@ private slots:
     void toolSelected(QAction*);
     void toggleSimState();
     void mousePosChanged(const QPointF&);
-    void objectsSelected(const QList<Object*>&);
+    void objectsSelected(const QList<QObject*>&);
 
 private:
     void createWorld();

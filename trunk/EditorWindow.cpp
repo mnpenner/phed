@@ -30,7 +30,7 @@ void EditorWindow::createWorld() {
     m_view = new EditorView(m_world, this);
     setCentralWidget(m_view);
     connect(m_view, SIGNAL(mousePosChanged(QPointF)), this, SLOT(mousePosChanged(QPointF)));
-    connect(m_world, SIGNAL(objectsSelected(QList<Object*>)), this, SLOT(objectsSelected(QList<Object*>)));
+    connect(m_world, SIGNAL(objectsSelected(QList<QObject*>)), this, SLOT(objectsSelected(QList<QObject*>)));
 }
 
 void EditorWindow::mousePosChanged(const QPointF &pos) {
@@ -244,12 +244,8 @@ bool EditorWindow::saveAs() {
     return false;
 }
 
-void EditorWindow::objectsSelected(const QList<Object*>& objs) {
-    QList<QObject*> qobjs;
-    foreach(Object *obj, objs) { // I don't really like casting the entire array this way, but I'm not sure what else to do
-        qobjs.append(dynamic_cast<QObject*>(obj));
-    }
-    m_propertyBrowser->setSelectedObjects(qobjs);
+void EditorWindow::objectsSelected(const QList<QObject*>& objs) {
+    m_propertyBrowser->setSelectedObjects(objs);
 }
 
 void EditorWindow::about() {

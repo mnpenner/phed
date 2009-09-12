@@ -6,7 +6,9 @@
  */
 
 #include <QtCore/QMetaProperty>
+#include <qt4/QtCore/qdatetime.h>
 #include "PropertyBrowser.h"
+#include "Object.h"
 
 PropertyBrowser::PropertyBrowser(QWidget* parent)
 : QtTreePropertyBrowser(parent), m_variantManager(new QtVariantPropertyManager(this)) {
@@ -41,7 +43,7 @@ void PropertyBrowser::setSelectedObjects(const QList<QObject*> &objs) {
     if(objs.isEmpty()) {
         return;
     }
-    for(int i = 0; i < objs.first()->metaObject()->propertyCount(); ++i) {
+    for(int i = 0; i < objs.first()->metaObject()->propertyCount(); ++i) { // FIXME: this loop takes ~250 ms for 18 properties
         QMetaProperty metaProperty(objs.first()->metaObject()->property(i));
         QtProperty * const property
                 = m_variantManager->addProperty(metaProperty.type(), humanize(metaProperty.name()));
@@ -54,6 +56,7 @@ void PropertyBrowser::setSelectedObjects(const QList<QObject*> &objs) {
         connect(obj, SIGNAL(propertyChanged()), this, SLOT(objectUpdated()));
     }
     objectUpdated();
+    
 }
 
 void PropertyBrowser::objectUpdated() {
@@ -62,7 +65,7 @@ void PropertyBrowser::objectUpdated() {
     }
     disconnect(m_variantManager, SIGNAL(valueChanged(QtProperty*, QVariant)), 
             this, SLOT(valueChanged(QtProperty*, QVariant)));
-    QMapIterator<QtProperty*, QByteArray> i(m_propertyMap);
+    QMapIterator<QtProperty*, QByteArray> i(m_propertyMap); // FIXME: should be looping over object's properties, not property map
     bool diff;
     while(i.hasNext()) {
         i.next();

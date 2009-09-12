@@ -8,8 +8,10 @@
 #include <algorithm>
 #include <limits>
 #include <qt4/QtCore/qline.h>
+#include <QtCore/QVarLengthArray>
 #include <Box2D/Box2D.h>
 #include "Polygon.h"
+#include "Point.h"
 
 Polygon::Polygon(): QPolygonF() {
 }
@@ -221,4 +223,14 @@ qreal Polygon::sqdist(const QPointF &a, const QPointF &b) {
     qreal dx = b.x() - a.x();
     qreal dy = b.y() - a.y();
     return dx * dx + dy * dy;
+}
+
+Polygon::operator b2PolygonShape() const {
+    QVarLengthArray<b2Vec2> arr(size());
+    for(int i=0; i<size(); ++i) {
+        arr[i] = (Point)(*this)[i];
+    }
+    b2PolygonShape ps;
+    ps.Set(arr.data(), arr.size());
+    return ps;
 }
