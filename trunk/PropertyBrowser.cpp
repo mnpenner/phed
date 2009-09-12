@@ -11,13 +11,14 @@
 #include "Object.h"
 
 PropertyBrowser::PropertyBrowser(QWidget* parent)
-: QtTreePropertyBrowser(parent), m_variantManager(new QtVariantPropertyManager(this)) {
+: QtTreePropertyBrowser(parent), m_variantManager(new QtVariantPropertyManager(this)), m_variantEditorFactory(new QtVariantEditorFactory(this)) {
     setHeaderVisible(false);
     setPropertiesWithoutValueMarked(true);
     setIndentation(10);
     setResizeMode(ResizeToContents);
     setAlternatingRowColors(false);
     setFactoryForManager(m_variantManager, new QtVariantEditorFactory);
+    
 }
 
 void PropertyBrowser::valueChanged(QtProperty *property, const QVariant &value) {
@@ -32,6 +33,44 @@ QString PropertyBrowser::humanize(QString str) const {
     return str.at(0).toUpper() + str.mid(1).replace(QRegExp("([a-z])([A-Z])"), "\\1 \\2");
 }
 
+void PropertyBrowser::setSelectedObjects(const QList<QObject*>& objs) {
+    foreach(QObject *obj, m_selectedObjects) {
+        disconnect(obj, SIGNAL(propertyChanged()), this, SLOT(objectUpdated()));
+    }
+    
+    clear();
+    m_selectedObjects = objs;
+
+    const QMetaObject *metaObject = objs.first()->metaObject();
+    const QByteArray className = metaObject->className();
+
+    QTime timer;
+    timer.start();
+    if(m_classManager.find(className) == m_classManager.end()) { // manager does not exist
+        m_classManager[className] = new QtVariantPropertyManager(this);
+        setFactoryForManager(m_classManager[className], m_variantEditorFactory);
+        for(int i=0; i< metaObject->propertyCount(); ++i) {
+            QMetaProperty metaProperty(metaObject->property(i));
+            QtProperty *property = m_classManager[className]->addProperty(metaProperty.type(), metaProperty.name());
+            m_classProperties[className][metaProperty.name()] = property;
+            addProperty(property);
+            setExpanded(topLevelItem(property), false);
+        }
+    } else {
+        QHashIterator<QByteArray, QtProperty*> i(m_classProperties[className]);
+        while(i.hasNext()) {
+            i.next();
+            addProperty(i.value());
+            setExpanded(topLevelItem(i.value()), false);
+        }
+    }
+    printf("%d ms\n", timer.elapsed());
+    foreach(QObject *obj, m_selectedObjects) {
+        connect(obj, SIGNAL(propertyChanged()), this, SLOT(objectUpdated()));
+    }
+    objectUpdated();
+}
+/*
 void PropertyBrowser::setSelectedObjects(const QList<QObject*> &objs) {
     foreach(QObject *obj, m_selectedObjects) {
         disconnect(obj, SIGNAL(propertyChanged()), this, SLOT(objectUpdated()));
@@ -58,7 +97,7 @@ void PropertyBrowser::setSelectedObjects(const QList<QObject*> &objs) {
     objectUpdated();
     
 }
-
+*/
 void PropertyBrowser::objectUpdated() {
     if(m_selectedObjects.isEmpty()) {
         return;

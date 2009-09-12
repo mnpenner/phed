@@ -27,8 +27,9 @@ private:
     QMap<QtProperty*, QByteArray> m_propertyMap;
     QList<QObject*> m_selectedObjects;
 
-    QtVariantEditorFactory m_vriantEditorFactory;
-    QHash<QString, QtVariantPropertyManager> m_classManager;
+    QtVariantEditorFactory *m_variantEditorFactory;
+    QHash<QByteArray/*class*/, QtVariantPropertyManager*> m_classManager;
+    QHash<QByteArray/*class*/, QHash<QByteArray/*propetyName*/, QtProperty*> > m_classProperties;
 };
 
 #endif	/* _PROPERTYBROWSER_H */
