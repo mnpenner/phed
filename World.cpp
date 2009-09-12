@@ -9,7 +9,7 @@
 #include "Object.h"
 
 World::World(const QPointF& gravity, bool doSleep, QObject *parent)
-: QObject(parent), m_world(b2Vec2(gravity.x(), gravity.y()), doSleep), m_physFPS(30) {
+: QObject(parent), m_world(b2Vec2(gravity.x(), gravity.y()), doSleep), m_physFPS(60) {
     setObjectName("world");
     connect(&m_physTimer, SIGNAL(timeout()), this, SLOT(simStep()));
     m_physTimer.setInterval(round(1000 / m_physFPS));
@@ -18,32 +18,44 @@ World::World(const QPointF& gravity, bool doSleep, QObject *parent)
 void World::simStep() {
     const float timeStep = 1 / (1000 / round(1000 / m_physFPS)); // the REAL fps is rounded because Qt only supports millisecond precision
     const int velocityIterations = 8;
-    const int positionIterations = 1;
+    const int positionIterations = 3;
     m_world.Step(timeStep, velocityIterations, positionIterations);
 
     if(!m_selectedObjects.isEmpty()) {
-        m_selectedObjects.first()->touch();
+        if(m_selectedObjects.first()->inherits("Object")) {
+            static_cast<Object*>(m_selectedObjects.first())->touch();
+        }
     }
 }
 
-const QList<Object*>& World::query(const QPointF& point, bool multiSelect) {
-    return query(QRectF(point.x()-0.005,point.y()-0.005,0.01,0.01), multiSelect);
+const QSet<Object*>& World::query(const QPointF& point, int limit) {
+    return query(QRectF(point.x()-0.005,point.y()-0.005,0.01,0.01), limit);
 }
 
-const QList<Object*>& World::query(const QRectF& rect, bool multiSelect) {
+const QSet<Object*>& World::query(const QRectF& rect, int limit) {
     b2AABB aabb;
     aabb.upperBound = b2Vec2(rect.left(), rect.top());
     aabb.lowerBound = b2Vec2(rect.right(), rect.bottom());
-    m_queriedObjects.clear();
-    m_multiSelect = multiSelect;
+    m_queryResult.clear();
+    m_queryResultsLimit = limit;
+    m_queryPoly.SetAsBox(aabb.GetExtents().x, aabb.GetExtents().y, aabb.GetCenter(), 0);
     m_world.QueryAABB(this, aabb);
-    return m_queriedObjects;
+    return m_queryResult;
 }
 
 bool World::ReportFixture(b2Fixture* f) {
-    // FIXME: ignores multiselect preference, and may report same body twice if clicking between fixtures
-    m_queriedObjects.append(static_cast<Object*>(f->GetBody()->GetUserData()));
-    return m_multiSelect;
+    if(m_queryResultsLimit != 0 && m_queryResult.size() >= m_queryResultsLimit) {
+        return false;
+    }
+    b2Manifold manifold;
+    b2Transform trans;
+    trans.SetIdentity();
+    b2CollidePolygons(&manifold, static_cast<b2PolygonShape*>(f->GetShape()),
+            f->GetBody()->GetTransform(), &m_queryPoly, trans);
+    if(manifold.m_pointCount > 0) {
+        m_queryResult.insert(static_cast<Object*>(f->GetBody()->GetUserData()));
+    }
+    return true;
 }
 
 QPointF World::gravity() const {
@@ -90,19 +102,25 @@ const QList<Object*>& World::objects() const {
     return m_objects;
 }
 
-const QList<Object*>& World::selectedObjects() const {
+const QList<QObject*>& World::selectedObjects() const {
     return m_selectedObjects;
 }
 
-void World::setSelectedObjects(const QList<Object*>& objs) {
-    foreach(Object *obj, m_selectedObjects) {
-        obj->m_selected = false;
+void World::setSelectedObjects(const QSet<Object*>& objs) {
+    QList<QObject*> qobjs;
+    foreach(QObject *obj, m_selectedObjects) {
+        obj->setProperty("selected", false);
     }
-    m_selectedObjects = objs;
-    foreach(Object *obj, objs) {
-        obj->m_selected = true;
+    if(objs.isEmpty()) {
+        qobjs.append(this);
+    } else {
+        foreach(Object *obj, objs) {
+            obj->setProperty("selected", true);
+            qobjs.append(obj);
+        }
     }
-    emit objectsSelected(objs);
+    m_selectedObjects = qobjs;
+    emit objectsSelected(qobjs);
 }
 
 void World::setSimulating(bool flag) {

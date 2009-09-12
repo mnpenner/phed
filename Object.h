@@ -12,6 +12,7 @@
 #include <QtGui/QGraphicsItem>
 #include <Box2D/Box2D.h>
 #include "Polygon.h"
+#include "Point.h"
 
 class World;
 
@@ -39,7 +40,7 @@ public:
     Object(const QPolygonF &poly = QPolygonF(), QObject *parent = NULL);
 
     // read
-    QPointF position() const;
+    Point position() const;
     qreal angle() const;
     QPointF linearVelocity() const;
     qreal angularVelocity() const;
@@ -58,7 +59,7 @@ public:
     QColor color() const;
 
     // write
-    void setPosition(const QPointF &pos);
+    void setPosition(const Point &pos);
     void setAngle(qreal angle);
     void setLinearVelocity(const QPointF &vel);
     void setAngularVelocity(qreal vel);
@@ -90,7 +91,6 @@ private:
     Polygon m_poly;
     QColor m_color;
     static int m_count;
-    bool m_selected;
 };
 
 

@@ -4,9 +4,11 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>Browsable.h</itemPath>
       <itemPath>EditorView.h</itemPath>
       <itemPath>EditorWindow.h</itemPath>
       <itemPath>Object.h</itemPath>
+      <itemPath>Point.h</itemPath>
       <itemPath>Polygon.h</itemPath>
       <itemPath>PropertyBrowser.h</itemPath>
       <itemPath>World.h</itemPath>
@@ -19,9 +21,11 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>Browsable.cpp</itemPath>
       <itemPath>EditorView.cpp</itemPath>
       <itemPath>EditorWindow.cpp</itemPath>
       <itemPath>Object.cpp</itemPath>
+      <itemPath>Point.cpp</itemPath>
       <itemPath>Polygon.cpp</itemPath>
       <itemPath>PropertyBrowser.cpp</itemPath>
       <itemPath>World.cpp</itemPath>

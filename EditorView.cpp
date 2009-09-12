@@ -71,9 +71,9 @@ void EditorView::closePoly() {
     m_world->addObject(obj);
     m_tmpPoly.clear();
 
-    QList<Object*> objs;
-    objs.push_back(obj);
-    m_world->setSelectedObjects(objs);
+    QSet<Object*> qobjs;
+    qobjs.insert(obj);
+    m_world->setSelectedObjects(qobjs);
 }
 
 void EditorView::mouseMoveEvent(QMouseEvent* event) {
@@ -81,8 +81,10 @@ void EditorView::mouseMoveEvent(QMouseEvent* event) {
     emit mousePosChanged(m_mousePos);
     QPointF mouseDiff = mapToWorld(event->pos()) - m_lastMousePos;
     if(m_tool == Select && event->buttons() & Qt::LeftButton) {
-        foreach(Object *obj, m_world->selectedObjects()) {
-            obj->translate(mouseDiff);
+        foreach(QObject *obj, m_world->selectedObjects()) {
+            if(obj->inherits("Object")) {
+                static_cast<Object*>(obj)->translate(mouseDiff);
+            }
         }
     }
     if(event->buttons() & Qt::MidButton) {
