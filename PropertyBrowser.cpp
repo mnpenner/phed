@@ -8,7 +8,7 @@
 #include <QtCore/QMetaProperty>
 #include <qt4/QtCore/qdatetime.h>
 #include "PropertyBrowser.h"
-#include "Object.h"
+#include "Body.h"
 
 PropertyBrowser::PropertyBrowser(QWidget* parent)
 : QtTreePropertyBrowser(parent), m_variantManager(new QtVariantPropertyManager(this)), m_variantEditorFactory(new QtVariantEditorFactory(this)) {
@@ -32,7 +32,7 @@ void PropertyBrowser::valueChanged(QtProperty *property, const QVariant &value) 
 QString PropertyBrowser::humanize(QString str) const {
     return str.at(0).toUpper() + str.mid(1).replace(QRegExp("([a-z])([A-Z])"), "\\1 \\2");
 }
-
+/*
 void PropertyBrowser::setSelectedObjects(const QList<QObject*>& objs) {
     foreach(QObject *obj, m_selectedObjects) {
         disconnect(obj, SIGNAL(propertyChanged()), this, SLOT(objectUpdated()));
@@ -70,7 +70,8 @@ void PropertyBrowser::setSelectedObjects(const QList<QObject*>& objs) {
     }
     objectUpdated();
 }
-/*
+*/
+
 void PropertyBrowser::setSelectedObjects(const QList<QObject*> &objs) {
     foreach(QObject *obj, m_selectedObjects) {
         disconnect(obj, SIGNAL(propertyChanged()), this, SLOT(objectUpdated()));
@@ -84,12 +85,13 @@ void PropertyBrowser::setSelectedObjects(const QList<QObject*> &objs) {
     }
     for(int i = 0; i < objs.first()->metaObject()->propertyCount(); ++i) { // FIXME: this loop takes ~250 ms for 18 properties
         QMetaProperty metaProperty(objs.first()->metaObject()->property(i));
-        QtProperty * const property
-                = m_variantManager->addProperty(metaProperty.type(), humanize(metaProperty.name()));
-        property->setEnabled(metaProperty.isWritable());
-        m_propertyMap[property] = metaProperty.name();
-        addProperty(property);
-        setExpanded(topLevelItem(property), false);
+        if(metaProperty.isDesignable()) {
+            QtProperty *property = m_variantManager->addProperty(metaProperty.type(), humanize(metaProperty.name()));
+            property->setEnabled(metaProperty.isWritable());
+            m_propertyMap[property] = metaProperty.name();
+            addProperty(property);
+            setExpanded(topLevelItem(property), false);
+        }
     }
     foreach(QObject *obj, m_selectedObjects) {
         connect(obj, SIGNAL(propertyChanged()), this, SLOT(objectUpdated()));
@@ -97,7 +99,7 @@ void PropertyBrowser::setSelectedObjects(const QList<QObject*> &objs) {
     objectUpdated();
     
 }
-*/
+
 void PropertyBrowser::objectUpdated() {
     if(m_selectedObjects.isEmpty()) {
         return;

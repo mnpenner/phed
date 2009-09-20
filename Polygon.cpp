@@ -12,6 +12,7 @@
 #include <Box2D/Box2D.h>
 #include "Polygon.h"
 #include "Point.h"
+#include "Circle.h"
 
 Polygon::Polygon(): QPolygonF() {
 }
@@ -20,15 +21,42 @@ Polygon::Polygon(int size): QPolygonF(size) {
 }
 
 Polygon::Polygon(const QPolygonF & polygon): QPolygonF(polygon) {
+    if(size() > 3 && first() == last()) pop_back();
 }
 
 Polygon::Polygon(const QVector<QPointF> & points): QPolygonF(points) {
+    if(size() > 3 && first() == last()) pop_back();
 }
 
-Polygon::Polygon(const QRectF & rectangle): QPolygonF(rectangle) {
+Polygon::Polygon(const Rect& rect) {
+    reserve(4);
+    append(rect.topLeft());
+    append(rect.topRight());
+    append(rect.bottomRight());
+    append(rect.bottomLeft());
 }
 
 Polygon::Polygon(const QPolygon & polygon): QPolygonF(polygon) {
+    if(size() > 3 && first() == last()) pop_back();
+}
+
+Polygon::Polygon(const b2PolygonShape& polygon) {
+    reserve(polygon.GetVertexCount());
+    for(int i = 0; i < polygon.GetVertexCount(); ++i) {
+        append((Point) polygon.GetVertex(i));
+    }
+}
+
+Polygon::Polygon(const Circle& circle, int points) {
+    if(points <= 0) points = round(circle.radius() * 15);
+    if(points < 3) points = 3;
+    qreal max = 2 * M_PI;
+    qreal inc = max / points;
+    reserve(points);
+    for(qreal d = 0; d < max; d += inc) {
+        prepend(Point(cos(d) * circle.radius() + circle.center().x(),
+                sin(d) * circle.radius() + circle.center().y()));
+    }
 }
 
 const QPointF& Polygon::at(int i) const {
@@ -225,12 +253,22 @@ qreal Polygon::sqdist(const QPointF &a, const QPointF &b) {
     return dx * dx + dy * dy;
 }
 
+qreal Polygon::area() const {
+    qreal a = 0;
+    int j = size() - 1;
+    for(int i = 1; i < j; ++i) {
+        a += area((*this)[0], (*this)[i], (*this)[i+1]);
+    }
+    return a;
+}
+
 Polygon::operator b2PolygonShape() const {
     QVarLengthArray<b2Vec2> arr(size());
-    for(int i=0; i<size(); ++i) {
-        arr[i] = (Point)(*this)[i];
+    for(int i = 0; i < size(); ++i) {
+        arr[i] = (Point) (*this)[i];
     }
     b2PolygonShape ps;
     ps.Set(arr.data(), arr.size());
     return ps;
 }
+
