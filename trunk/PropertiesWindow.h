@@ -9,7 +9,7 @@
 #define	_PROPERTIESWINDOW_H
 
 #include <QtGui/QtGui>
-#include "Object.h"
+#include "Body.h"
 #include "PropertyBrowser.h"
 
 class PropertiesWindow : public QDockWidget {

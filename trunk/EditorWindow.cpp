@@ -234,6 +234,28 @@ void EditorWindow::newFile() {
 }
 
 void EditorWindow::open() {
+    QString fileName = QFileDialog::getOpenFileName(this,
+        tr("Save Map"), "maps",
+        tr("Phed Map (*.pdm);;All Files (*)"));
+
+    if(fileName.isEmpty())
+        return;
+
+    QFile file(fileName);
+    if(!file.open(QIODevice::ReadOnly)) {
+        QMessageBox::information(this, tr("Unable to open file"),
+            file.errorString());
+        return;
+    }
+
+    QDataStream in(&file);
+    while(!in.atEnd()) {
+        Polygon p;
+        in >> p;
+        Body *body = new Body(p, m_world);
+        m_world->addBody(body);
+        in >> *body;
+    }
 }
 
 bool EditorWindow::save() {
@@ -241,7 +263,27 @@ bool EditorWindow::save() {
 }
 
 bool EditorWindow::saveAs() {
-    return false;
+    QString fileName = QFileDialog::getSaveFileName(this,
+        tr("Save Map"), "maps",
+        tr("Phed Map (*.pdm);;All Files (*)"));
+
+    if (fileName.isEmpty())
+        return false;
+
+    QFile file(fileName);
+
+    if (!file.open(QIODevice::WriteOnly)) {
+        QMessageBox::information(this, tr("Unable to open file"),
+            file.errorString());
+        return false;
+    }
+
+    QDataStream out(&file);
+    foreach(Body *obj, m_world->objects()) {
+        out << obj->m_poly;
+        out << *obj;
+    }
+    return true;
 }
 
 void EditorWindow::objectsSelected(const QList<QObject*>& objs) {

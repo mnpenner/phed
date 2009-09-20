@@ -14,10 +14,24 @@
 #include <QtCore/QRectF>
 #include <QtCore/QSet>
 #include <Box2D/Box2D.h>
+#include "Point.h"
+#include "Polygon.h"
+#include "Rect.h"
+#include "Object.h"
 
-class Object;
+class Body;
 
-class World : public QObject, b2QueryCallback {
+struct Contact {
+    Point lp; // local point
+    Point wp; // world point
+    Point n; // normal
+    b2Fixture *f; // fixture
+    qreal I; // impulse magnitude
+    Point lv; // linear velocity
+    qreal av; // angular velocity
+};
+
+class World : public Object, b2QueryCallback, b2ContactListener {
     Q_OBJECT
     Q_PROPERTY(QPointF gravity  READ gravity    WRITE setGravity);
     
@@ -27,22 +41,33 @@ public:
     // read
     QPointF gravity() const;
     bool simulating();
+    b2MouseJoint *mouseJoint();
 
     // write
     void setGravity(const QPointF&);
     void setSimulating(bool);
 
     // misc
-    void addObject(Object*);
-    const QList<Object*>& objects() const;
+    void addBody(Body*);
+    void removeObject(Body*);
+    const QList<Body*>& objects() const;
     const QList<QObject*>& selectedObjects() const;
-    void setSelectedObjects(const QSet<Object*>&);
-    const QSet<Object*>& query(const QPointF& point, int maxResults = 1);
-    const QSet<Object*>& query(const QRectF& rect, int maxResults = 0);
+    void setSelectedObjects(const QSet<Body*>&);
+    const QSet<Body*>& query(const Point& point, int maxResults = 1);
+    const QSet<Body*>& query(const Polygon& rect, int maxResults = 0);
+    b2Body* groundBody() const;
+
+    void addMouseJoint(Body*, const Point &p); // FIXME: should be a list of objects, or abstracted to general joint
+    void destroyMouseJoint();
+    void updateMouseJoint(const Point &p);
 
 
 protected:
     bool ReportFixture(b2Fixture *f);
+    void BeginContact(b2Contact *contact);
+    void EndContact(b2Contact *contact);
+    void PreSolve(b2Contact *contact, const b2Manifold *oldManifold);
+    void PostSolve(const b2Contact *contact, const b2ContactImpulse *impulse);
 
 signals:
     void propertyChanged() const;
@@ -53,13 +78,25 @@ protected slots:
 
 private:
     b2World m_world;
-    QList<Object*> m_objects;
+    b2Body *m_groundBody;
+    QList<Body*> m_objects;
     QList<QObject*> m_selectedObjects;
-    QSet<Object*> m_queryResult;
+    QSet<Body*> m_queryResult;
     QTimer m_physTimer;
     int m_physFPS;
     int m_queryResultsLimit;
-    b2PolygonShape m_queryPoly;
+    //b2PolygonShape m_queryPoly;
+    Polygon m_queryPoly;
+    b2MouseJoint *m_mouseJoint;
+    
+    int m_manifoldPointCount;
+    b2Fixture *m_fixtureA;
+    b2Fixture *m_fixtureB;
+    Body *m_objA;
+    Body *m_objB;
+    QList<Contact> m_contacts;
+    b2Vec2 m_lv1, m_lv2;
+    qreal m_av1, m_av2;
 };
 
 #endif	/* _WORLD_H */

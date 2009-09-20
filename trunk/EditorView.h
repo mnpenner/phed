@@ -43,6 +43,7 @@ protected:
     void mouseDoubleClickEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent* event);
     void resizeEvent(QResizeEvent *event);
+    void keyPressEvent(QKeyEvent* event);
 
     void drawCircle(GLfloat x, GLfloat y, GLfloat r);
     void drawGrid();

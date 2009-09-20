@@ -10,6 +10,8 @@
 
 #include <QtGui/QPolygonF>
 #include <Box2D/Collision/Shapes/b2PolygonShape.h>
+#include "Circle.h"
+#include "Rect.h"
 
 class Polygon : public QPolygonF {
 public:
@@ -18,8 +20,10 @@ public:
     Polygon(int size);
     Polygon(const QPolygonF & polygon);
     Polygon(const QVector<QPointF> & points);
-    Polygon(const QRectF & rectangle);
+    Polygon(const Rect & rect);
     Polygon(const QPolygon & polygon);
+    Polygon(const b2PolygonShape & polygon);
+    Polygon(const Circle &circle, int points = 0);
     const QPointF& at(int i) const;
     Polygon ccw() const;
     Polygon copy(int i, int j) const;
@@ -32,6 +36,7 @@ public:
     bool rightOn(int i) const;
     bool collinear(int i) const;
     bool reflex(int i) const;
+    qreal area() const;
     QList<Polygon> decomp() const;
     static bool left(const QPointF &a, const QPointF &b, const QPointF &c);
     static bool leftOn(const QPointF &a, const QPointF &b, const QPointF &c);

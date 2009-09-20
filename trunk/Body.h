@@ -1,0 +1,107 @@
+/* 
+ * File:   Object.h
+ * Author: mark
+ *
+ * Created on August 19, 2009, 7:10 PM
+ */
+
+#ifndef _BODY_H
+#define	_BODY_H
+
+#include <QtCore/QObject>
+#include <QtGui/QGraphicsItem>
+#include <Box2D/Box2D.h>
+#include "Polygon.h"
+#include "Point.h"
+#include "Object.h"
+
+class World;
+
+class Body : public Object {
+    Q_OBJECT
+    Q_PROPERTY(qreal    mass                READ mass               STORED false);
+    Q_PROPERTY(qreal    inertia             READ inertia            STORED false);
+    Q_PROPERTY(bool     isStatic            READ isStatic           STORED false);
+    Q_PROPERTY(bool     isBreakable         READ isBreakable        STORED false);
+    Q_PROPERTY(QPointF  position            READ position           WRITE setPosition);
+    Q_PROPERTY(QPointF  linearVelocity      READ linearVelocity     WRITE setLinearVelocity);
+    Q_PROPERTY(qreal    angle               READ angle              WRITE setAngle);
+    Q_PROPERTY(qreal    angularVelocity     READ angularVelocity    WRITE setAngularVelocity);
+    Q_PROPERTY(qreal    linearDamping       READ linearDamping      WRITE setLinearDamping);
+    Q_PROPERTY(qreal    angularDamping      READ angularDamping     WRITE setAngularDamping);
+    Q_PROPERTY(qreal    density             READ density            WRITE setDensity);
+    Q_PROPERTY(qreal    friction            READ friction           WRITE setFriction);
+    Q_PROPERTY(qreal    restitution         READ restitution        WRITE setRestitution);
+    Q_PROPERTY(qreal    breakingPoint       READ breakingPoint      WRITE setBreakingPoint);
+    Q_PROPERTY(bool     isBullet            READ isBullet           WRITE setBullet);
+    Q_PROPERTY(bool     isAllowedToSleep    READ isAllowedToSleep   WRITE setAllowedToSleep);
+    Q_PROPERTY(bool     isSleeping          READ isSleeping         WRITE setSleeping);
+    Q_PROPERTY(bool     isSensor            READ isSensor           WRITE setSensor);
+    Q_PROPERTY(QColor   color               READ color              WRITE setColor);
+    friend class World;
+public:
+    Body(const QPolygonF &poly = QPolygonF(), QObject *parent = NULL);
+
+    // read
+    Point position() const;
+    qreal angle() const;
+    Point linearVelocity() const;
+    qreal angularVelocity() const;
+    qreal mass() const;
+    qreal inertia() const;
+    qreal linearDamping() const;
+    qreal angularDamping() const;
+    bool isBullet() const;
+    bool isAllowedToSleep() const;
+    bool isSleeping() const;
+    bool isStatic() const;
+    qreal density() const;
+    bool isSensor() const;
+    qreal friction() const;
+    qreal restitution() const;
+    QColor color() const;
+    qreal breakingPoint() const;
+    bool isBreakable() const;
+
+    // write
+    void setPosition(const Point &pos);
+    void setAngle(qreal angle);
+    void setLinearVelocity(const Point &vel);
+    void setAngularVelocity(qreal vel);
+    void setLinearDamping(qreal damp);
+    void setAngularDamping(qreal damp);
+    void setBullet(bool flag);
+    void setAllowedToSleep(bool flag);
+    void setSleeping(bool flag);
+    void setDensity(qreal density);
+    void setSensor(bool flag);
+    void setFriction(qreal fric);
+    void setRestitution(qreal rest);
+    void setColor(const QColor &poly);
+    void setBreakingPoint(qreal bp);
+
+    // misc
+    void paintGL() const;
+    void translate(const Point &amount);
+    void setPolygon(const QPolygonF &poly);
+
+    operator b2Body*() const;
+
+protected:
+    b2Body *body() const;
+
+public:
+    b2Body *m_body;
+    Polygon m_poly;
+    QColor m_color;
+    static int m_count;
+    qreal m_breakingPoint;
+
+    b2BodyDef m_bodyDef;
+    b2FixtureDef m_fixtureDef;
+};
+
+
+
+#endif	/* _BODY_H */
+

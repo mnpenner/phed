@@ -10,7 +10,8 @@
 #include <QtGui/QMouseEvent>
 #include <qt4/QtGui/qabstractslider.h>
 #include "EditorView.h"
-#include "Object.h"
+#include "Body.h"
+#include "Point.h"
 
 EditorView::EditorView(World *world, QWidget *parent)
 : QGLWidget(QGLFormat(QGL::DoubleBuffer), parent), m_world(world), m_showGrid(false),
@@ -18,6 +19,8 @@ EditorView::EditorView(World *world, QWidget *parent)
     setMouseTracking(true);
     m_redrawTimer.start(1000 / m_drawFPS);
     connect(&m_redrawTimer, SIGNAL(timeout()), this, SLOT(updateGL()));
+    setFocus(); // accept keyboard events
+    setFocusPolicy(Qt::ClickFocus);
 }
 
 void EditorView::mousePressEvent(QMouseEvent* event) {
@@ -28,6 +31,11 @@ void EditorView::mousePressEvent(QMouseEvent* event) {
             switch(m_tool) {
                 case Select:
                     m_world->setSelectedObjects(m_world->query(mousePos));
+                    if(m_world->simulating() && !m_world->selectedObjects().isEmpty()) {
+                        if(m_world->selectedObjects().first()->inherits("Body")) {
+                            m_world->addMouseJoint((Body*)m_world->selectedObjects().first(), mousePos);
+                        }
+                    }
                     break;
                 case Polygon:
                     if(m_readyClosePoly) {
@@ -66,12 +74,12 @@ void EditorView::mouseDoubleClickEvent(QMouseEvent* event) {
 }
 
 void EditorView::closePoly() {
-    Object *obj = new Object(m_tmpPoly, m_world);
+    Body *obj = new Body(m_tmpPoly, m_world);
     obj->setColor(m_tmpColor);
-    m_world->addObject(obj);
+    m_world->addBody(obj);
     m_tmpPoly.clear();
 
-    QSet<Object*> qobjs;
+    QSet<Body*> qobjs;
     qobjs.insert(obj);
     m_world->setSelectedObjects(qobjs);
 }
@@ -79,12 +87,16 @@ void EditorView::closePoly() {
 void EditorView::mouseMoveEvent(QMouseEvent* event) {
     m_mousePos = mapToWorld(event->pos());
     emit mousePosChanged(m_mousePos);
-    QPointF mouseDiff = mapToWorld(event->pos()) - m_lastMousePos;
+    Point mouseDiff = m_mousePos - m_lastMousePos;
     if(m_tool == Select && event->buttons() & Qt::LeftButton) {
-        foreach(QObject *obj, m_world->selectedObjects()) {
-            if(obj->inherits("Object")) {
-                static_cast<Object*>(obj)->translate(mouseDiff);
+        if(m_world->mouseJoint() == NULL) {
+            foreach(QObject *obj, m_world->selectedObjects()) {
+                if(obj->inherits("Body")) {
+                    static_cast<Body*>(obj)->translate(mouseDiff);
+                }
             }
+        } else {
+            m_world->updateMouseJoint(m_mousePos);
         }
     }
     if(event->buttons() & Qt::MidButton) {
@@ -98,7 +110,9 @@ void EditorView::mouseMoveEvent(QMouseEvent* event) {
 }
 
 void EditorView::mouseReleaseEvent(QMouseEvent* event) {
-    if(event->button() == Qt::MidButton) {
+    if(event->button() == Qt::LeftButton && m_tool == Select) {
+        m_world->destroyMouseJoint();
+    } else if(event->button() == Qt::MidButton) {
         setCursor(m_lastCursor);
     }
 }
@@ -150,7 +164,7 @@ void EditorView::initializeGL() {
 void EditorView::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    foreach(Object *obj, m_world->objects()) { // TODO: query the world for visible objects first!
+    foreach(Body *obj, m_world->objects()) { // TODO: query the world for visible objects first!
         obj->paintGL();
     }
 
@@ -180,7 +194,28 @@ void EditorView::paintGL() {
         }
     }
 
+    if(m_world->mouseJoint() != NULL) {
+        glLineWidth(1.5);
+        glColor3ub(64,128,255);
+        glBegin(GL_LINES);
+        {
+            glVertex2f(m_world->mouseJoint()->GetAnchor2().x, m_world->mouseJoint()->GetAnchor2().y);
+            glVertex2f(m_mousePos.x(), m_mousePos.y());
+        }
+        glEnd();
+    }
+
     if(m_showGrid) drawGrid();
+}
+
+void EditorView::keyPressEvent(QKeyEvent* event) {
+    if(event->key() == Qt::Key_Delete) {
+        foreach(QObject *qobj, m_world->selectedObjects()) {
+            if(qobj->inherits("Body")) {
+                m_world->removeObject(static_cast<Body*>(qobj));
+            }
+        }
+    }
 }
 
 void EditorView::showGrid(bool flag) {
