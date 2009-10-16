@@ -12,6 +12,7 @@ template<class T>
 class ScopedPointer {
 public:
     ScopedPointer(T* ptr = new T) : m_ptr(ptr) {}
+    ScopedPointer(const T &obj) : m_ptr(new T(obj)) {}
     ~ScopedPointer() {
         delete m_ptr;
     }

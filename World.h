@@ -50,16 +50,18 @@ public:
     // misc
     void addBody(Body*);
     void removeObject(Body*);
-    const QList<Body*>& objects() const;
-    const QList<QObject*>& selectedObjects() const;
+    const QList<Body*>& bodies() const;
+    const QList<Object*>& selectedObjects() const;
     void setSelectedObjects(const QSet<Body*>&);
     const QSet<Body*>& query(const Point& point, int maxResults = 1);
     const QSet<Body*>& query(const Polygon& rect, int maxResults = 0);
     b2Body* groundBody() const;
 
-    void addMouseJoint(Body*, const Point &p); // FIXME: should be a list of objects, or abstracted to general joint
+    void addMouseJoint(Body*, const Point &p); // FIXME: should be a list of bodies, or abstracted to general joint
     void destroyMouseJoint();
     void updateMouseJoint(const Point &p);
+
+    void reset();
 
 
 protected:
@@ -71,7 +73,7 @@ protected:
 
 signals:
     void propertyChanged() const;
-    void objectsSelected(const QList<QObject*>&);
+    void objectsSelected(const QList<Object*>&);
 
 protected slots:
     void simStep();
@@ -79,13 +81,12 @@ protected slots:
 private:
     b2World m_world;
     b2Body *m_groundBody;
-    QList<Body*> m_objects;
-    QList<QObject*> m_selectedObjects;
+    QList<Body*> m_bodies;
+    QList<Object*> m_selectedObjects;
     QSet<Body*> m_queryResult;
     QTimer m_physTimer;
     int m_physFPS;
     int m_queryResultsLimit;
-    //b2PolygonShape m_queryPoly;
     Polygon m_queryPoly;
     b2MouseJoint *m_mouseJoint;
     

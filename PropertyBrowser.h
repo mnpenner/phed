@@ -10,12 +10,13 @@
 
 #include <QtPropertyBrowser/QtTreePropertyBrowser>
 #include <QtPropertyBrowser/QtVariantPropertyManager>
+#include "Object.h"
 
 class PropertyBrowser : public QtTreePropertyBrowser {
     Q_OBJECT
 public:
     PropertyBrowser(QWidget *parent = NULL);
-    void setSelectedObjects(const QList<QObject*> &objs);
+    void setSelectedObjects(const QList<Object*> &objs);
 
 private slots:
     void valueChanged(QtProperty *property, const QVariant &value);
@@ -25,7 +26,7 @@ private:
     QString humanize(QString str) const;
     QtVariantPropertyManager *m_variantManager;
     QMap<QtProperty*, QByteArray> m_propertyMap;
-    QList<QObject*> m_selectedObjects;
+    QList<Object*> m_selectedObjects;
 
     QtVariantEditorFactory *m_variantEditorFactory;
     QHash<QByteArray/*class*/, QtVariantPropertyManager*> m_classManager;

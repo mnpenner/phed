@@ -5,11 +5,11 @@
                    displayName="Header Files"
                    projectFiles="true">
       <itemPath>Body.h</itemPath>
-      <itemPath>Browsable.h</itemPath>
       <itemPath>Circle.h</itemPath>
       <itemPath>ContactListener.h</itemPath>
       <itemPath>EditorView.h</itemPath>
       <itemPath>EditorWindow.h</itemPath>
+      <itemPath>Fixture.h</itemPath>
       <itemPath>Object.h</itemPath>
       <itemPath>Point.h</itemPath>
       <itemPath>Polygon.h</itemPath>
@@ -26,11 +26,11 @@
                    displayName="Source Files"
                    projectFiles="true">
       <itemPath>Body.cpp</itemPath>
-      <itemPath>Browsable.cpp</itemPath>
       <itemPath>Circle.cpp</itemPath>
       <itemPath>ContactListener.cpp</itemPath>
       <itemPath>EditorView.cpp</itemPath>
       <itemPath>EditorWindow.cpp</itemPath>
+      <itemPath>Fixture.cpp</itemPath>
       <itemPath>Object.cpp</itemPath>
       <itemPath>Point.cpp</itemPath>
       <itemPath>Polygon.cpp</itemPath>

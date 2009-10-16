@@ -12,13 +12,20 @@
 
 class Object : public QObject {
     Q_OBJECT
+    friend QDataStream &operator<<(QDataStream&, const Object&);
+    friend QDataStream &operator>>(QDataStream&, Object&);
     
 public:
     Object(QObject *parent = NULL);
     void touch() const;
+    bool selected() const;
+    void setSelected(bool);
 
 signals:
     void propertyChanged() const;
+
+private:
+    bool m_selected;
 };
 
 #endif	/* _OBJECT_H */

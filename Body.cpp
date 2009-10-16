@@ -16,7 +16,7 @@
 
 int Body::m_count = 0;
 
-Body::Body(const QPolygonF& poly, QObject *parent) : Object(parent), m_poly(poly) {
+Body::Body(QObject *parent) : Object(parent) {
     setObjectName(tr("object%1").arg(m_count++));
     m_fixtureDef.density = 1.0;
     m_breakingPoint = 0;
@@ -24,9 +24,36 @@ Body::Body(const QPolygonF& poly, QObject *parent) : Object(parent), m_poly(poly
     m_body = NULL;
 }
 
-void Body::setPolygon(const QPolygonF& poly) {
-    Q_ASSERT_X(m_body == NULL, "setPolygon", "Polygon cannot be set after adding to World");
-    m_poly = poly;
+void Body::addPolygon(const Polygon& poly) {
+    QList<Polygon> parts = poly.ccw().convexPartition();
+    if(m_body) {
+        foreach(Polygon p, parts) {
+            b2PolygonShape ps = p;
+            m_fixtureDef.shape = &ps; // FIXME: m_fixtureDef might not be up to date...
+            m_body->CreateFixture(&m_fixtureDef);
+        }
+    }
+    m_polygons += parts;
+}
+
+void Body::setPolygons(const QList<Polygon>& polygons) {
+    // TODO: add case with m_body not NULL
+    m_polygons = polygons;
+}
+
+void Body::clearFixtures() {
+    if(m_body) {
+        b2Fixture *fix = m_body->GetFixtureList(), *tmp;
+        while(fix) {
+            tmp = fix;
+            fix = fix->GetNext();
+            m_body->DestroyFixture(tmp);
+        }
+    }
+}
+
+QList<Polygon> Body::polygons() const {
+    return m_polygons;
 }
 
 QColor Body::color() const {
@@ -57,9 +84,9 @@ void Body::setPosition(const Point &pos) {
     }
 }
 
-void Body::translate(const Point &amount) {
-    if(m_body) m_body->SetTransform(m_body->GetPosition() + amount, m_body->GetAngle());
-    else m_bodyDef.position += amount;
+void Body::translate(const Point &d) {
+    if(m_body) m_body->SetTransform(m_body->GetPosition() + d, m_body->GetAngle());
+    else m_bodyDef.position += d;
     emit propertyChanged();
 }
 
@@ -227,6 +254,7 @@ qreal Body::density() const {
 
 void Body::setDensity(qreal dens) {
     if(dens != density()) {
+        if(dens == 0) setLinearVelocity(b2Vec2(0,0));
         if(m_body && m_body->GetFixtureList()) {
             for(b2Fixture *f = m_body->GetFixtureList(); f; f = f->GetNext()) {
                 f->SetDensity(dens);
@@ -263,7 +291,6 @@ qreal Body::restitution() const {
 }
 
 void Body::setRestitution(qreal rest) {
-    Q_ASSERT(m_body != NULL);
     if(rest != restitution()) {
         if(m_body && m_body->GetFixtureList()) {
             for(b2Fixture *f = m_body->GetFixtureList(); f; f = f->GetNext()) {
@@ -294,7 +321,8 @@ void Body::paintGL() const {
                 poly = static_cast<b2PolygonShape*>(f->GetShape());
                 vertexCount = poly->m_vertexCount;
 
-                glColor4ub(m_color.red(), m_color.green(), m_color.blue(), property("selected").toBool()?255:64);
+                int alpha = selected() ? sin((m_time.elapsed()%1000)*(M_PI/1000))*255 : 128;
+                glColor4ub(m_color.red(), m_color.green(), m_color.blue(), alpha);
                 glBegin(GL_POLYGON);
                 for(int32 i = 0; i < vertexCount; ++i) {
                     glVertex2f(poly->m_vertices[i].x, poly->m_vertices[i].y);
@@ -310,7 +338,7 @@ void Body::paintGL() const {
                 break;
             }
             default:
-                Q_ASSERT_X(false, "Object::paintGL", "Unhandled shape type");
+                Q_ASSERT_X(false, "paintGL", "Unhandled shape type");
                 break;
         }
     }
@@ -318,6 +346,9 @@ void Body::paintGL() const {
     glPopMatrix();
 }
 
-Body::operator b2Body*() const {
-    return m_body;
+void Body::addFixture(const Fixture& fixture) {
+    m_fixtures.append(fixture);
+    b2FixtureDef fd = fixture;
+    m_body->CreateFixture(&fd);
+    delete fd.shape;
 }

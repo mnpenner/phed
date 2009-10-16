@@ -9,6 +9,7 @@
 #define	_RECT_H
 
 #include <QtCore/QRectF>
+#include <QtCore/QMetaType>
 #include <Box2D/Box2D.h>
 
 class Rect : public QRectF {
@@ -21,9 +22,9 @@ public:
     Rect(const QRect & rect);
     Rect(const b2AABB & aabb);
     operator b2AABB() const;
-private:
-
 };
+
+Q_DECLARE_METATYPE(Rect)
 
 #endif	/* _RECT_H */
 

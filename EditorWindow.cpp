@@ -30,7 +30,7 @@ void EditorWindow::createWorld() {
     m_view = new EditorView(m_world, this);
     setCentralWidget(m_view);
     connect(m_view, SIGNAL(mousePosChanged(QPointF)), this, SLOT(mousePosChanged(QPointF)));
-    connect(m_world, SIGNAL(objectsSelected(QList<QObject*>)), this, SLOT(objectsSelected(QList<QObject*>)));
+    connect(m_world, SIGNAL(objectsSelected(QList<Object*>)), this, SLOT(objectsSelected(QList<Object*>)));
 }
 
 void EditorWindow::mousePosChanged(const QPointF &pos) {
@@ -231,6 +231,7 @@ void EditorWindow::createStatusBar() {
 }
 
 void EditorWindow::newFile() {
+    m_world->reset();
 }
 
 void EditorWindow::open() {
@@ -249,16 +250,16 @@ void EditorWindow::open() {
     }
 
     QDataStream in(&file);
+    m_world->reset();
     while(!in.atEnd()) {
-        Polygon p;
-        in >> p;
-        Body *body = new Body(p, m_world);
-        m_world->addBody(body);
+        Body *body = new Body(m_world);
         in >> *body;
+        m_world->addBody(body); 
     }
 }
 
 bool EditorWindow::save() {
+    QMessageBox::information(this, "Not implemented", "This function has not been implemented.");
     return false;
 }
 
@@ -279,14 +280,13 @@ bool EditorWindow::saveAs() {
     }
 
     QDataStream out(&file);
-    foreach(Body *obj, m_world->objects()) {
-        out << obj->m_poly;
-        out << *obj;
+    foreach(Body *body, m_world->bodies()) {
+        out << *body;
     }
     return true;
 }
 
-void EditorWindow::objectsSelected(const QList<QObject*>& objs) {
+void EditorWindow::objectsSelected(const QList<Object*>& objs) {
     m_propertyBrowser->setSelectedObjects(objs);
 }
 

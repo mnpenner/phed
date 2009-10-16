@@ -25,3 +25,10 @@ void Circle::setCenter(const Point& p) {
 void Circle::setRadius(qreal r) {
     m_radius = r;
 }
+
+Circle::operator b2CircleShape() const {
+    b2CircleShape cs;
+    cs.m_p = m_center;
+    cs.m_radius = m_radius;
+    return cs;
+}

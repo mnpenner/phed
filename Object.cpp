@@ -8,10 +8,18 @@
 #include <QtCore/QMetaProperty>
 #include "Object.h"
 
-Object::Object(QObject* parent) : QObject(parent) {}
+Object::Object(QObject* parent) : QObject(parent), m_selected(false) {}
 
 void Object::touch() const {
     emit propertyChanged();
+}
+
+void Object::setSelected(bool b) {
+    m_selected = b;
+}
+
+bool Object::selected() const {
+    return m_selected;
 }
 
 QDataStream &operator<<(QDataStream &ds, const Object &obj) {
