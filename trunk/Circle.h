@@ -19,10 +19,13 @@ public:
     qreal radius() const;
     void setCenter(const Point& p);
     void setRadius(qreal r);
+    operator b2CircleShape() const;
 private:
     Point m_center;
     qreal m_radius;
 };
+
+Q_DECLARE_METATYPE(Circle)
 
 #endif	/* _CIRCLE_H */
 

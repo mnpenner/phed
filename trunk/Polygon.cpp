@@ -98,7 +98,7 @@ bool Polygon::isConvex() const { // precondition: ccw
     return true;
 }
 
-QList<Polygon> Polygon::decomp() const { // precondition: ccw; see mnbayazit.com/406/bayazit for details about how this works
+QList<Polygon> Polygon::convexPartition() const { // precondition: ccw; see mnbayazit.com/406/bayazit for details about how this works
     QList<Polygon> list;
     qreal d, dist1, dist2;
     QPointF ip, ip1, ip2; // intersection points
@@ -162,8 +162,8 @@ QList<Polygon> Polygon::decomp() const { // precondition: ccw; see mnbayazit.com
                 poly1 = copy(i, bestIndex);
                 poly2 = copy(bestIndex, i);
             }
-            list += poly1.decomp();
-            list += poly2.decomp();
+            list += poly1.convexPartition();
+            list += poly2.convexPartition();
             return list;
         }
     }
@@ -171,8 +171,8 @@ QList<Polygon> Polygon::decomp() const { // precondition: ccw; see mnbayazit.com
     if(size() > b2_maxPolygonVertices) {
         poly1 = copy(0, size() / 2);
         poly2 = copy(size() / 2, 0);
-        list += poly1.decomp();
-        list += poly2.decomp();
+        list += poly1.convexPartition();
+        list += poly2.convexPartition();
     } else list.append(*this);
     return list;
 }
@@ -270,5 +270,24 @@ Polygon::operator b2PolygonShape() const {
     b2PolygonShape ps;
     ps.Set(arr.data(), arr.size());
     return ps;
+}
+
+QDataStream &operator<<(QDataStream& ds, const PolygonList& pl) {
+    ds << pl.size();
+    foreach(Polygon p, pl) {
+        ds << p;
+    }
+    return ds;
+}
+
+QDataStream &operator>>(QDataStream& ds, PolygonList& pl) {
+    int s;
+    Polygon p;
+    ds >> s;
+    for(int i = 0; i < s; ++i) {
+        ds >> p;
+        pl.append(p);
+    }
+    return ds;
 }
 

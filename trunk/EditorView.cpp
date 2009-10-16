@@ -74,13 +74,14 @@ void EditorView::mouseDoubleClickEvent(QMouseEvent* event) {
 }
 
 void EditorView::closePoly() {
-    Body *obj = new Body(m_tmpPoly, m_world);
-    obj->setColor(m_tmpColor);
-    m_world->addBody(obj);
+    Body *body = new Body(m_world);
+    body->addPolygon(m_tmpPoly);
+    body->setColor(m_tmpColor);
+    m_world->addBody(body);
     m_tmpPoly.clear();
 
     QSet<Body*> qobjs;
-    qobjs.insert(obj);
+    qobjs.insert(body);
     m_world->setSelectedObjects(qobjs);
 }
 
@@ -90,7 +91,7 @@ void EditorView::mouseMoveEvent(QMouseEvent* event) {
     Point mouseDiff = m_mousePos - m_lastMousePos;
     if(m_tool == Select && event->buttons() & Qt::LeftButton) {
         if(m_world->mouseJoint() == NULL) {
-            foreach(QObject *obj, m_world->selectedObjects()) {
+            foreach(Object *obj, m_world->selectedObjects()) {
                 if(obj->inherits("Body")) {
                     static_cast<Body*>(obj)->translate(mouseDiff);
                 }
@@ -164,7 +165,7 @@ void EditorView::initializeGL() {
 void EditorView::paintGL() {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    foreach(Body *obj, m_world->objects()) { // TODO: query the world for visible objects first!
+    foreach(Body *obj, m_world->bodies()) { // TODO: query the world for visible objects first!
         obj->paintGL();
     }
 
@@ -210,7 +211,7 @@ void EditorView::paintGL() {
 
 void EditorView::keyPressEvent(QKeyEvent* event) {
     if(event->key() == Qt::Key_Delete) {
-        foreach(QObject *qobj, m_world->selectedObjects()) {
+        foreach(Object *qobj, m_world->selectedObjects()) {
             if(qobj->inherits("Body")) {
                 m_world->removeObject(static_cast<Body*>(qobj));
             }

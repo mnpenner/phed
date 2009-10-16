@@ -5,17 +5,26 @@
  * Created on August 31, 2009, 6:32 PM
  */
 
+#include <QtCore/QVarLengthArray>
 #include "World.h"
 #include "Body.h"
 #include "ScopedPointer.h"
 
 World::World(const QPointF& gravity, bool doSleep, QObject *parent)
-: QObject(parent), m_world(b2Vec2(gravity.x(), gravity.y()), doSleep), m_physFPS(60), m_mouseJoint(NULL) {
+: Object(parent), m_world(b2Vec2(gravity.x(), gravity.y()), doSleep), m_physFPS(60), m_mouseJoint(NULL) {
     setObjectName("world");
     connect(&m_physTimer, SIGNAL(timeout()), this, SLOT(simStep()));
     m_physTimer.setInterval(round(1000 / m_physFPS));
     m_groundBody = m_world.CreateBody(ScopedPointer<b2BodyDef > ());
     m_world.SetContactListener(this);
+}
+
+void World::reset() {
+    foreach(Body *b, m_bodies) {
+        m_world.DestroyBody(b->m_body);
+    }
+    m_bodies.clear();
+    m_selectedObjects.clear();
 }
 
 void World::BeginContact(b2Contact*) {
@@ -31,10 +40,10 @@ void World::PreSolve(b2Contact* contact, const b2Manifold*) {
     m_fixtureB = contact->GetFixtureB();
     m_objA = static_cast<Body*>(contact->GetFixtureA()->GetBody()->GetUserData());
     m_objB = static_cast<Body*>(contact->GetFixtureB()->GetBody()->GetUserData());
-    m_lv1 = m_objA->body()->GetLinearVelocity();
-    m_av1 = m_objA->body()->GetAngularVelocity();
-    m_lv2 = m_objB->body()->GetLinearVelocity();
-    m_av2 = m_objB->body()->GetAngularVelocity();
+    m_lv1 = m_objA->linearVelocity();
+    m_av1 = m_objA->angularVelocity();
+    m_lv2 = m_objB->linearVelocity();
+    m_av2 = m_objB->angularVelocity();
 }
 
 void World::PostSolve(const b2Contact* contact, const b2ContactImpulse* impulse) {
@@ -80,7 +89,8 @@ void World::simStep() {
         b2Vec2 impulse = b2Vec2(I*c.n.x(), I*c.n.y());
 
         if(!intersec.isEmpty()) {
-            obj = new Body(intersec, this);
+            obj = new Body(this);
+            obj->addPolygon(intersec);
             addBody(obj);
             obj->setPosition(c.f->GetBody()->GetPosition());
             obj->setAngle(c.f->GetBody()->GetAngle());
@@ -91,7 +101,8 @@ void World::simStep() {
         }
         
         if(!rest.isEmpty()) {
-            obj = new Body(rest, this);
+            obj = new Body(this);
+            obj->addPolygon(rest);
             addBody(obj);
             obj->setPosition(c.f->GetBody()->GetPosition());
             obj->setAngle(c.f->GetBody()->GetAngle());
@@ -159,13 +170,11 @@ void World::setGravity(const QPointF& g) {
     }
 }
 
-void World::addBody(Body* obj) {
+void World::addBody(Body* body) {
     int fixtureCount = 0;
-    obj->m_body = m_world.CreateBody(&obj->m_bodyDef);
-    
-    QList<Polygon> parts = obj->m_poly.ccw().decomp();
+    body->m_body = m_world.CreateBody(&body->m_bodyDef);
 
-    foreach(Polygon poly, parts) {
+    foreach(Polygon poly, body->polygons()) {
         for(int i=0; i<poly.size(); ++i) {
             Point edge = poly[i] - poly.at(i+1);
             if(edge.lengthSquared() <= B2_FLT_EPSILON * B2_FLT_EPSILON) {
@@ -175,34 +184,27 @@ void World::addBody(Body* obj) {
         if(poly.size() < 3) continue;
         if(poly.area() <= B2_FLT_EPSILON) continue;
 
-        QVector<b2Vec2> vertices(poly.size());
-        for(int i = 0; i < poly.size(); ++i) {
-            vertices[i] = (Point) poly[i];
-        }
-
-        b2PolygonShape ps;
-        ps.Set(&vertices[0], vertices.size());
-
-        obj->m_fixtureDef.shape = &ps;
-        obj->m_body->CreateFixture(&obj->m_fixtureDef);
+        b2PolygonShape ps = poly;
+        body->m_fixtureDef.shape = &ps;
+        body->m_body->CreateFixture(&body->m_fixtureDef);
         
         fixtureCount++;
     }
 
     if(fixtureCount <= 0) {
-        m_world.DestroyBody(obj->body());
+        m_world.DestroyBody(body->body());
         return;
     }
 
-    obj->m_body->SetMassFromShapes();
-    obj->m_body->SetUserData(obj);
-    m_objects.append(obj);
+    body->m_body->SetMassFromShapes();
+    body->m_body->SetUserData(body);
+    m_bodies.append(body);
 }
 
-void World::removeObject(Body* obj) { // FIXME: causes crashes (or leaks without deleting the obj??)
-    m_world.DestroyBody(obj->body());
-    m_objects.removeOne(obj);
-    m_selectedObjects.removeOne(obj);
+void World::removeObject(Body* body) { // FIXME: causes crashes (or leaks without deleting the obj??)
+    m_world.DestroyBody(body->body());
+    m_bodies.removeOne(body);
+    m_selectedObjects.removeOne(body);
     //obj->deleteLater();
 }
 
@@ -210,15 +212,15 @@ b2MouseJoint *World::mouseJoint() {
     return m_mouseJoint;
 }
 
-void World::addMouseJoint(Body* obj, const Point &p) {
+void World::addMouseJoint(Body* body, const Point &p) {
     destroyMouseJoint();
     b2MouseJointDef md;
     md.body1 = m_groundBody;
-    md.body2 = obj->body();
+    md.body2 = body->body();
     md.target = p;
-    md.maxForce = obj->mass() * 1000;
+    md.maxForce = body->mass() * 1000;
     m_mouseJoint = static_cast<b2MouseJoint*> (m_world.CreateJoint(&md));
-    obj->setSleeping(false);
+    body->setSleeping(false);
 }
 
 void World::updateMouseJoint(const Point& p) {
@@ -233,36 +235,35 @@ void World::destroyMouseJoint() {
     }
 }
 
-const QList<Body*>& World::objects() const {
-    return m_objects;
+const QList<Body*>& World::bodies() const {
+    return m_bodies;
 }
 
-const QList<QObject*>& World::selectedObjects() const {
+const QList<Object*>& World::selectedObjects() const {
     return m_selectedObjects;
 }
 
-void World::setSelectedObjects(const QSet<Body*>& objs) {
-    QList<QObject*> qobjs;
+void World::setSelectedObjects(const QSet<Body*>& bodies) {
+    QList<Object*> objects;
 
-    foreach(QObject *obj, m_selectedObjects) {
-        obj->setProperty("selected", false);
+    foreach(Object *obj, m_selectedObjects) {
+        obj->setSelected(false);
     }
-    if(objs.isEmpty()) {
-        qobjs.append(this);
+    if(bodies.isEmpty()) {
+        objects.append(this);
     } else {
-
-        foreach(Body *obj, objs) {
-            obj->setProperty("selected", true);
-            qobjs.append(obj);
+        foreach(Body *body, bodies) {
+            body->setSelected(true);
+            objects.append(body);
         }
     }
-    m_selectedObjects = qobjs;
-    emit objectsSelected(qobjs);
+    m_selectedObjects = objects;
+    emit objectsSelected(objects);
 }
 
-void World::setSimulating(bool flag) {
-    if(flag != simulating()) {
-        if(flag) m_physTimer.start();
+void World::setSimulating(bool b) {
+    if(b != simulating()) {
+        if(b) m_physTimer.start();
         else m_physTimer.stop();
         emit propertyChanged();
     }

@@ -9,13 +9,13 @@
 #define	_POLYGON_H
 
 #include <QtGui/QPolygonF>
+#include <QtCore/QMetaType>
 #include <Box2D/Collision/Shapes/b2PolygonShape.h>
 #include "Circle.h"
 #include "Rect.h"
 
 class Polygon : public QPolygonF {
 public:
-
     Polygon();
     Polygon(int size);
     Polygon(const QPolygonF & polygon);
@@ -37,7 +37,7 @@ public:
     bool collinear(int i) const;
     bool reflex(int i) const;
     qreal area() const;
-    QList<Polygon> decomp() const;
+    QList<Polygon> convexPartition() const;
     static bool left(const QPointF &a, const QPointF &b, const QPointF &c);
     static bool leftOn(const QPointF &a, const QPointF &b, const QPointF &c);
     static bool right(const QPointF &a, const QPointF &b, const QPointF &c);
@@ -48,7 +48,13 @@ public:
     operator b2PolygonShape() const;
 };
 
+typedef QList<Polygon> PolygonList;
 
+QDataStream &operator<<(QDataStream&, const PolygonList&);
+QDataStream &operator>>(QDataStream&, PolygonList&);
+
+Q_DECLARE_METATYPE(Polygon)
+Q_DECLARE_METATYPE(PolygonList)
 
 #endif	/* _POLYGON_H */
 

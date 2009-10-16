@@ -10,10 +10,12 @@
 
 #include <QtCore/QObject>
 #include <QtGui/QGraphicsItem>
+#include <QtCore/QTime>
 #include <Box2D/Box2D.h>
 #include "Polygon.h"
 #include "Point.h"
 #include "Object.h"
+#include "Fixture.h"
 
 class World;
 
@@ -38,9 +40,10 @@ class Body : public Object {
     Q_PROPERTY(bool     isSleeping          READ isSleeping         WRITE setSleeping);
     Q_PROPERTY(bool     isSensor            READ isSensor           WRITE setSensor);
     Q_PROPERTY(QColor   color               READ color              WRITE setColor);
+    Q_PROPERTY(PolygonList polygons         READ polygons           WRITE setPolygons           DESIGNABLE false);
     friend class World;
 public:
-    Body(const QPolygonF &poly = QPolygonF(), QObject *parent = NULL);
+    Body(QObject *parent = NULL);
 
     // read
     Point position() const;
@@ -62,6 +65,7 @@ public:
     QColor color() const;
     qreal breakingPoint() const;
     bool isBreakable() const;
+    QList<Polygon> polygons() const;
 
     // write
     void setPosition(const Point &pos);
@@ -79,29 +83,30 @@ public:
     void setRestitution(qreal rest);
     void setColor(const QColor &poly);
     void setBreakingPoint(qreal bp);
+    void setPolygons(const QList<Polygon> &polygons);
+    void clearFixtures();
 
     // misc
     void paintGL() const;
     void translate(const Point &amount);
-    void setPolygon(const QPolygonF &poly);
-
-    operator b2Body*() const;
+    void addPolygon(const Polygon &poly);
+    void addFixture(const Fixture &fixture);
 
 protected:
     b2Body *body() const;
 
 public:
     b2Body *m_body;
-    Polygon m_poly;
     QColor m_color;
     static int m_count;
     qreal m_breakingPoint;
+    QTime m_time;
+    PolygonList m_polygons;
+    QList<Fixture> m_fixtures;
 
     b2BodyDef m_bodyDef;
-    b2FixtureDef m_fixtureDef;
+    b2FixtureDef m_fixtureDef; // TODO: just make this a QList and scrap m_polygons...
 };
-
-
 
 #endif	/* _BODY_H */
 
