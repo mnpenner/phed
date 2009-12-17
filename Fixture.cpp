@@ -7,15 +7,7 @@
 
 #include "Fixture.h"
 
-Fixture::Fixture(b2Fixture *fix, const FixtureDef &def, QObject *parent) : Object(parent), m_b2fixture(fix) {
-}
 
-b2Body *Body::b2fixture() {
-    return m_b2fixture;
-}
-
-
-/*
 Fixture::Fixture(QObject *parent) : Object(parent) {
     m_polygon       = Polygon();
     m_friction      = 0.20;
@@ -82,4 +74,3 @@ Fixture::operator b2FixtureDef() const {
     fd.shape = new b2PolygonShape(m_polygon);
     return fd;
 }
- */
