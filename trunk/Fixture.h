@@ -11,21 +11,7 @@
 #include "Object.h"
 #include "Polygon.h"
 
-struct FixtureDef : public b2FixtureDef {
-};
 
-class Fixture : public Object {
-    friend class Body;
-    Q_OBJECT
-public:
-private:
-    Fixture(b2Fixture *fix, const FixtureDef& def, QObject* parent = NULL);
-    b2Fixture *b2fixture();
-    b2Fixture *m_b2fixture;
-};
-
-
-/*
 class Fixture : public Object {
     Q_OBJECT
     Q_PROPERTY(Polygon polygon READ polygon WRITE setPolygon)
@@ -63,7 +49,7 @@ private:
 };
 
 Q_DECLARE_METATYPE(Fixture)
-*/
+
 
 
 
